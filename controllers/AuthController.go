@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin/render"
 	"pubsubhub/config"
 	"pubsubhub/dtos"
+	"pubsubhub/services"
 )
 
 func SignUp(appConfig *config.ApplicationConfig) gin.HandlerFunc {
@@ -23,7 +24,7 @@ func SignIn(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var user dtos.User
 		if context.ShouldBind(&user) == nil {
-			authenticatedUser := appConfig.AuthenticateUser(user.Username, user.Password)
+			authenticatedUser := services.AuthenticateUser(appConfig, user.Username, user.Password)
 			if authenticatedUser != nil {
 				context.JSON(200, dtos.Response{Status: true, Message: "Sign in successful", Data: render.JSON{Data: authenticatedUser}})
 				return

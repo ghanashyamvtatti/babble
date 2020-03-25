@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin/render"
 	"pubsubhub/config"
 	"pubsubhub/dtos"
+	"pubsubhub/services"
 	"strconv"
 )
 
@@ -19,7 +20,7 @@ func GetUserDetails(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 			})
 			return
 		}
-		user := appConfig.GetUserById(userId)
+		user := services.GetUserById(appConfig, userId)
 		if user != nil {
 			context.JSON(200, dtos.Response{
 				Status:  true,
@@ -49,7 +50,7 @@ func GetUserFeed(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 			})
 			return
 		}
-		feed := appConfig.GetFeedForUserId(userId)
+		feed := services.GetFeedForUserId(appConfig, userId)
 		context.JSON(200, dtos.Response{
 			Status:  true,
 			Message: "Successfully fetched feed",
@@ -71,7 +72,7 @@ func GetUserPosts(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 			})
 			return
 		}
-		posts := appConfig.GetPostsForUserId(userId)
+		posts := services.GetPostsForUserId(appConfig, userId)
 		context.JSON(200, dtos.Response{
 			Status:  true,
 			Message: "Successfully fetched user posts",
@@ -95,7 +96,7 @@ func CreatePost(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 		}
 		var post dtos.Post
 		if context.ShouldBind(&post) == nil {
-			appConfig.AddPost(userId, post.Post)
+			services.AddPost(appConfig, userId, post.Post)
 			context.JSON(200, dtos.Response{
 				Status:  true,
 				Message: "Successfully added post",
@@ -131,7 +132,7 @@ func Subscribe(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 			})
 			return
 		}
-		appConfig.Subscribe(userId, publisherUserId)
+		services.Subscribe(appConfig, userId, publisherUserId)
 
 		context.JSON(200, dtos.Response{
 			Status:  true,
@@ -161,7 +162,7 @@ func Unsubscribe(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 			})
 			return
 		}
-		appConfig.Unsubscribe(userId, publisherUserId)
+		services.Unsubscribe(appConfig, userId, publisherUserId)
 		context.JSON(200, dtos.Response{
 			Status:  true,
 			Message: "Successfully unsubscribed",
