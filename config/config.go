@@ -1,34 +1,23 @@
 package config
 
 import (
-	"pubsubhub/models"
-	"time"
+	"ds-project/models"
 )
 
 type ApplicationConfig struct {
-	Users         []*models.User
-	Posts         []*models.Post
-	Subscriptions []*models.Subscription
+	Users         map[string]models.User
+	Tokens        map[string]string
+	Posts         map[string][]*models.Post
+	Subscriptions map[string][]string
 }
 
 func NewAppConfig() *ApplicationConfig {
 	appConfig := &ApplicationConfig{
-		Users:         nil,
-		Posts:         nil,
-		Subscriptions: nil,
+		Users:         map[string]models.User{},
+		Tokens:        map[string]string{},
+		Posts:         map[string][]*models.Post{},
+		Subscriptions: map[string][]string{},
 	}
 
 	return appConfig
-}
-
-func (appConfig *ApplicationConfig) AddUser(fullName string, username string, password string) {
-	newUser := &models.User{
-		Id:        len(appConfig.Users),
-		FullName:  fullName,
-		Username:  username,
-		Password:  password,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-	appConfig.Users = append(appConfig.Users, newUser)
 }

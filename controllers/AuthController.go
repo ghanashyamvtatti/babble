@@ -1,49 +1,112 @@
 package controllers
 
 import (
+	"ds-project/common/utilities"
+	"ds-project/config"
+	"ds-project/dtos"
+	"ds-project/models"
+	"ds-project/services"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/render"
-	"pubsubhub/config"
-	"pubsubhub/dtos"
-	"pubsubhub/services"
+	"net/http"
 )
 
-func SignUp(appConfig *config.ApplicationConfig) gin.HandlerFunc {
-	return func(context *gin.Context) {
-		var user dtos.User
-		if context.ShouldBind(&user) == nil {
-			appConfig.AddUser(user.FullName, user.Username, user.Password)
-			context.String(200, "User successfully created")
+func SignIn(appConfig *config.ApplicationConfig) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var login dtos.UserLogin
+
+		if err := ctx.ShouldBind(&login); err != nil {
+			ctx.JSON(http.StatusBadRequest, dtos.Response{
+				Status:  false,
+				Message: err.Error(),
+			})
+			return
+		}
+
+		if services.Login(appConfig, login.Username, login.Password) {
+			ctx.JSON(http.StatusOK, dtos.Response{
+				Status:  true,
+				Message: "Successfully logged in",
+				Data: gin.H{
+					"user":  login.Username,
+					"token": services.GenerateAccessToken(appConfig, login.Username),
+				},
+			})
 		} else {
-			context.String(500, "Unable to create user")
+
+			ctx.JSON(http.StatusInternalServerError, dtos.Response{
+				Status:  false,
+				Message: "Authentication failed",
+				Data:    nil,
+			})
 		}
 	}
 }
 
-func SignIn(appConfig *config.ApplicationConfig) gin.HandlerFunc {
-	return func(context *gin.Context) {
-		var user dtos.User
-		if context.ShouldBind(&user) == nil {
-			authenticatedUser := services.AuthenticateUser(appConfig, user.Username, user.Password)
-			if authenticatedUser != nil {
-				context.JSON(200, dtos.Response{Status: true, Message: "Sign in successful", Data: render.JSON{Data: authenticatedUser}})
+func SignUp(appConfig *config.ApplicationConfig) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+
+		var registerUser dtos.UserRegistration
+		if err := ctx.ShouldBind(&registerUser); err != nil {
+			ctx.JSON(http.StatusBadRequest, dtos.Response{
+				Status:  false,
+				Message: err.Error(),
+			})
+			return
+		}
+
+		if !services.CheckUserNameExists(appConfig, registerUser.Username) {
+			password, err := utilities.HashPassword(registerUser.Password)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, dtos.Response{
+					Status:  false,
+					Message: "Unable to create user",
+					Data:    nil,
+				})
 				return
 			}
+			services.CreateUser(appConfig, registerUser.Username, models.User{FullName: registerUser.FullName, Password: password})
 		}
-		context.JSON(500, dtos.Response{
-			Status:  false,
-			Message: "Invalid username or password",
-			Data:    render.JSON{},
+
+		ctx.JSON(http.StatusOK, dtos.Response{
+			Status:  true,
+			Message: "Successfully registered user",
+			Data: gin.H{
+				"user":  registerUser.Username,
+				"token": services.GenerateAccessToken(appConfig, registerUser.Username),
+			},
 		})
 	}
 }
 
-func SignOut() gin.HandlerFunc {
+func SignOut(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 	return func(context *gin.Context) {
+		services.Logout(appConfig, context.Param("username"))
 		context.JSON(200, dtos.Response{
 			Status:  true,
 			Message: "Successfully signed out the user",
-			Data:    render.JSON{},
+			Data:    nil,
 		})
+	}
+}
+
+func Authenticate(appConfig *config.ApplicationConfig) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		username := context.Param("username")
+		if ! services.CheckUserNameExists(appConfig, username) {
+			context.JSON(500, dtos.Response{
+				Status:  false,
+				Message: "Invalid username",
+				Data:    nil,
+			})
+			context.Abort()
+		}
+		if !services.CheckAccessTokenValid(appConfig, username, context.GetHeader("token")) {
+			context.JSON(http.StatusUnauthorized, dtos.Response{
+				Status:  false,
+				Message: "Missing or invalid access token",
+				Data:    nil,
+			})
+			context.Abort()
+		}
 	}
 }

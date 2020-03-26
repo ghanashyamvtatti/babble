@@ -1,38 +1,30 @@
 package services
 
 import (
-	"pubsubhub/config"
-	"pubsubhub/models"
+	"ds-project/config"
+	"ds-project/models"
 	"time"
 )
 
-func AddPost(appConfig *config.ApplicationConfig, userId int, post string) {
+func AddPost(appConfig *config.ApplicationConfig, username string, post string) {
 	newPost := &models.Post{
-		Id:        len(appConfig.Posts),
-		UserId:    userId,
 		Post:      post,
 		CreatedAt: time.Now(),
 		UpdateAt:  time.Now(),
 	}
-	appConfig.Posts = append(appConfig.Posts, newPost)
+	appConfig.Posts[username] = append(appConfig.Posts[username], newPost)
 }
 
-func GetPostsForUserId(appConfig *config.ApplicationConfig, userId int) []*models.Post {
-	var posts []*models.Post
-	for _, post := range appConfig.Posts {
-		if post.UserId == userId {
-			posts = append(posts, post)
-		}
-	}
-	return posts
+func GetPostsForUser(appConfig *config.ApplicationConfig, username string) []*models.Post {
+	return appConfig.Posts[username]
 }
 
-func GetFeedForUserId(appConfig *config.ApplicationConfig, userId int) []*models.Post {
-	subscriptions := GetSubscriptionsForUserId(appConfig, userId)
+func GetFeedForUsername(appConfig *config.ApplicationConfig, username string) []*models.Post {
+	subscriptions := GetSubscriptionsForUsername(appConfig, username)
 	var posts []*models.Post
 
 	for _, subscription := range subscriptions {
-		posts = append(posts, GetPostsForUserId(appConfig, subscription.Publisher.Id)...)
+		posts = append(posts, GetPostsForUser(appConfig, subscription)...)
 	}
 
 	return posts

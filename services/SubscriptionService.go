@@ -1,37 +1,25 @@
 package services
 
 import (
-	"pubsubhub/config"
-	"pubsubhub/models"
-	"time"
+	"ds-project/config"
 )
 
-func Subscribe(appConfig *config.ApplicationConfig, subscriberId int, publisherId int) {
-	newSubscription := &models.Subscription{
-		Id:         len(appConfig.Subscriptions),
-		Subscriber: GetUserById(appConfig, subscriberId),
-		Publisher:  GetUserById(appConfig, publisherId),
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
-	}
-	appConfig.Subscriptions = append(appConfig.Subscriptions, newSubscription)
+func Subscribe(appConfig *config.ApplicationConfig, subscriber string, publisher string) {
+	// TODO: Pratik needs to implement this
+	appConfig.Subscriptions[subscriber] = append(appConfig.Subscriptions[subscriber], publisher)
 }
 
-func Unsubscribe(appConfig *config.ApplicationConfig, subscriberId int, publisherId int) {
-	for i, subscription := range appConfig.Subscriptions {
-		if subscription.Subscriber.Id == subscriberId && subscription.Publisher.Id == publisherId {
-			appConfig.Subscriptions = append(appConfig.Subscriptions[:i], appConfig.Subscriptions[i+1:]...)
-			return
+func Unsubscribe(appConfig *config.ApplicationConfig, subscriber string, publisher string) {
+	// TODO: Pratik needs to implement this
+	for index, pub := range appConfig.Subscriptions[subscriber] {
+		if publisher == pub {
+			appConfig.Subscriptions[subscriber] = append(appConfig.Subscriptions[subscriber][:index], appConfig.Subscriptions[subscriber][index+1:]...)
 		}
 	}
 }
 
-func GetSubscriptionsForUserId(appConfig *config.ApplicationConfig, userId int) []*models.Subscription {
-	var subscriptions []*models.Subscription
-	for _, subscription := range appConfig.Subscriptions {
-		if subscription.Subscriber.Id == userId {
-			subscriptions = append(subscriptions, subscription)
-		}
-	}
-	return subscriptions
+func GetSubscriptionsForUsername(appConfig *config.ApplicationConfig, username string) []string {
+	// TODO: Pratik needs to implement this
+	//return nil
+	return appConfig.Subscriptions[username]
 }
