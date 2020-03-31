@@ -12,6 +12,7 @@ func main() {
 
 	appConfig := config.NewAppConfig()
 
+	router.Use(controllers.CORSMiddleware())
 	// Auth group
 	auth := router.Group("/auth")
 	{
@@ -32,6 +33,9 @@ func main() {
 		social.DELETE("/subscribe/:publisher", controllers.Unsubscribe(appConfig))
 		social.GET("/subscriptions", controllers.GetSubscriptions(appConfig))
 	}
+
+	// Get all users
+	router.GET("/social/user", controllers.GetUsers(appConfig))
 
 	router.Run(":8080")
 }
