@@ -4,9 +4,14 @@ import (
 	"ds-project/config"
 	"ds-project/models"
 	"time"
+	"sync"
 )
 
+var (
+	mutex sync.Mutex
+)
 func AddPost(appConfig *config.ApplicationConfig, username string, post string) {
+	mutex.Lock()
 	newPost := &models.Post{
 		Post:      post,
 		Username:  username,
@@ -14,6 +19,7 @@ func AddPost(appConfig *config.ApplicationConfig, username string, post string) 
 		UpdateAt:  time.Now(),
 	}
 	appConfig.Posts[username] = append(appConfig.Posts[username], newPost)
+	mutex.Unlock()
 }
 
 func GetPostsForUser(appConfig *config.ApplicationConfig, username string) []*models.Post {

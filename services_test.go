@@ -63,7 +63,7 @@ func TestMultiplePost(t *testing.T) {
 	initialPostsLength := len(initialPosts)
 
 	wg := sync.WaitGroup{}
-	for idx := 0; idx < 100; idx++ {
+	for idx := 0; idx < 1000; idx++ {
 		wg.Add(1)
 
 		go func(idx int) {
@@ -80,11 +80,24 @@ func TestMultiplePost(t *testing.T) {
 	log.Println(initialPostsLength)
 	log.Println(finalPostsLength)
 
-	if finalPostsLength != initialPostsLength + 100 {
+	if finalPostsLength != initialPostsLength + 1000 {
 		t.Error("fails")
 	}
 
 	// for i := 0; i < finalPostsLength; i++ {
 	// 	log.Println(finalPosts[i].Post)
 	// }
+}
+
+
+func TestGetFeedForUsers(t *testing.T){
+	log.Println("Testing get post service")
+	appConfig := config.NewAppConfig()
+	feeds := services.GetFeedForUsername(appConfig, "varun")
+
+	log.Println(feeds[0].Post)
+	
+	if len(feeds) == 0 {
+		t.Error("fails")
+	}
 }
