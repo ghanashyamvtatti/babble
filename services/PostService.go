@@ -9,6 +9,7 @@ import (
 func AddPost(appConfig *config.ApplicationConfig, username string, post string) {
 	newPost := &models.Post{
 		Post:      post,
+		Username:  username,
 		CreatedAt: time.Now(),
 		UpdateAt:  time.Now(),
 	}
