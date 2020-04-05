@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package userproto;
+
+
+message USER_ID {
+   int64 user_id = 1;
+}
+
+message ACCESSTOKEN {
+   string userid = 1;
+}
+
+message VALID {
+   bool isValid = 1;
+}
+
+
+message REGISTERUSER {
+   string user = 1;
+   string name = 2;
+   string password = 3;
+}
+
+message LOGINUSER {
+   string user = 1;
+   string password = 2;
+}
+
+message USER {
+
+  message DATA {
+     int64 id = 1;
+     string user = 2;
+     string name = 3;
+     string password = 4;
+  }
+
+   DATA data =1;
+}
+
+message LOGINRESPONSE {
+
+  message DATA {
+    string status = 1;
+    string token = 2;
+
+    message USER {
+       int64 id = 1;
+       string user = 2;
+       string name = 3;
+       string password = 4;
+    }
+
+    USER user = 3;
+  }
+
+   DATA data = 1;
+}
+
+
+service UserService {
+  rpc Register(REGISTERUSER) returns (USER);
+  rpc Login(LOGINUSER) returns (LOGINRESPONSE);
+  rpc GetUser(USER_ID) returns (USER);
+  rpc CheckAuth(ACCESSTOKEN) returns (VALID);
+  rpc CheckUserValid(USER_ID) returns (VALID);
+}
