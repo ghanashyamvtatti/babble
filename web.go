@@ -3,6 +3,8 @@ package main
 import (
 	"ds-project/config"
 	"ds-project/controllers"
+	"ds-project/common/proto"
+	"google.golang.org/grpc"
 	"github.com/gin-gonic/gin"
 )
 
@@ -49,6 +51,15 @@ func SetupRouter() *gin.Engine{
 
 	router.Use(controllers.CORSMiddleware())
 	// Auth group
+
+	userConnection, err := grpc.Dial("localhost:3001", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+
+	userClient := userproto.NewUserServiceClient(userConnection)
+
+
 	auth := router.Group("/auth")
 	{
 		auth.POST("/sign-up", controllers.SignUp(appConfig))
@@ -69,7 +80,7 @@ func SetupRouter() *gin.Engine{
 		social.GET("/subscriptions", controllers.GetSubscriptions(appConfig))
 	}
 		// Get all users
-	router.GET("/social/user", controllers.GetUsers(appConfig))
+	router.GET("/social/user", controllers.GetUsers(userClient))
 
 	return router;
 

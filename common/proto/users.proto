@@ -3,6 +3,10 @@ syntax = "proto3";
 package userproto;
 
 
+option go_package = "example.com/foo/bar";
+
+
+
 message TOKEN {
    string token = 1;
 }
@@ -32,9 +36,17 @@ message USER {
    string fullname = 2;
 }
 
+message USERS{
+   repeated USER users = 1;
+}
+
 message CHECKACCESSTOKEN {
    string username = 1;
    string token = 2;
+}
+
+message REQ{
+   string nothing = 1;
 }
 
 
@@ -43,7 +55,7 @@ service UserService {
   rpc Register(REGISTER) returns (USER);
   rpc SignIn(LOGIN) returns (VALID);
 
-  rpc GetUsers() returns (USER);
+  rpc GetUsers(REQ) returns (USERS);
 
   rpc CheckUserNameExists(USERNAME) returns (VALID);
   rpc GenerateAccessToken(USERNAME) returns (TOKEN);
