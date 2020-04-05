@@ -1,5 +1,42 @@
 # Distributed Systems: Final Project
 
+## Project Structure
+
+```
+.
+├── common                  # Contains utilities common to the entire project
+├── config                  # Application session level data structures and their initial values
+├── models                  # Individual data structures (users and posts)
+├── services                # Services layer code for user auth, subscriptions and posts
+├── controllers             # Controllers for the various endpoints defined in web.go
+├── dtos                    # Data Transfer Objects (shapes the data in the format expected by the UI)
+├── UI                      # ReactJS based UI
+├── web.go                  # Contains the gin routes 
+├── route_testing.go        # Integration tests
+├── service_test.go         # Service tests 
+├── go.mod
+├── .gitignore
+└── README.md
+```
+## Setup
+
+### Backend
+
+1. `cd` into your GOPATH
+2. `git clone https://github.com/Distributed-Systems-CSGY9223/vo383-ppr239-gvt217-final-project ds-project`
+3. `cd ds-project`
+4. `go build ds-project`
+5. `go run web.go`
+
+### UI
+
+(ensure you have yarn or npm installed)
+1. `cd ds-project/UI`
+2. `npm start` or `yarn start`
+3. Open `localhost:3000` in the browser
+
+## Description
+
 The project for this course will be to develop (in stages), a distributed, reliable backend in support of a mildly complex (think twitter) social media application.
 
 The development of this project is divided into 3 stages!
