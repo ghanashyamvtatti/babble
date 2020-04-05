@@ -3,12 +3,12 @@ syntax = "proto3";
 package userproto;
 
 
-message USER_ID {
-   int64 user_id = 1;
+message TOKEN {
+   string token = 1;
 }
 
-message ACCESSTOKEN {
-   string userid = 1;
+message USERNAME {
+   string username = 1;
 }
 
 message VALID {
@@ -16,53 +16,36 @@ message VALID {
 }
 
 
-message REGISTERUSER {
-   string user = 1;
-   string name = 2;
+message REGISTER {
+   string username = 1;
+   string fullname = 2;
    string password = 3;
 }
 
-message LOGINUSER {
-   string user = 1;
+message LOGIN {
+   string username = 1;
    string password = 2;
 }
 
 message USER {
-
-  message DATA {
-     int64 id = 1;
-     string user = 2;
-     string name = 3;
-     string password = 4;
-  }
-
-   DATA data =1;
+   string username = 1;
+   string fullname = 2;
 }
 
-message LOGINRESPONSE {
-
-  message DATA {
-    string status = 1;
-    string token = 2;
-
-    message USER {
-       int64 id = 1;
-       string user = 2;
-       string name = 3;
-       string password = 4;
-    }
-
-    USER user = 3;
-  }
-
-   DATA data = 1;
+message CHECKACCESSTOKEN {
+   string username = 1;
+   string token = 2;
 }
+
 
 
 service UserService {
-  rpc Register(REGISTERUSER) returns (USER);
-  rpc Login(LOGINUSER) returns (LOGINRESPONSE);
-  rpc GetUser(USER_ID) returns (USER);
-  rpc CheckAuth(ACCESSTOKEN) returns (VALID);
-  rpc CheckUserValid(USER_ID) returns (VALID);
+  rpc Register(REGISTER) returns (USER);
+  rpc SignIn(LOGIN) returns (VALID);
+
+  rpc GetUsers() returns (USER);
+
+  rpc CheckUserNameExists(USERNAME) returns (VALID);
+  rpc GenerateAccessToken(USERNAME) returns (TOKEN);
+  rpc CheckAccessTokenValid(CHECKACCESSTOKEN) returns (VALID);
 }
