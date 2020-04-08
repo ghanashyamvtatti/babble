@@ -1,0 +1,131 @@
+/*
+Defines the protocol buffers for the Data Service Layer Server
+ */
+
+syntax = "proto3";
+package proto;
+import "google/protobuf/timestamp.proto";
+
+option go_package = "ds-project/common/proto";
+
+// Messages for posts
+
+message AddPostRequest {
+  string username = 1;
+  string post = 2;
+}
+
+message AddPostResponse {
+  bool ok = 1;
+}
+
+message GetPostsRequest {
+  string username = 1;
+}
+
+message GetPostsResponse {
+  map<string, Post> posts = 1;
+}
+
+message Post {
+  string post = 1;
+  string username = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+// Messages for subscriptions
+
+message GetSubscriptionsRequest {
+  string username = 1;
+}
+
+message GetSubscriptionsResponse {
+  repeated string subscriptions = 1;
+}
+
+message SubscribeRequest {
+  string subscriber = 1;
+  string publisher = 2;
+}
+
+message SubscribeResponse {
+  bool ok = 1;
+}
+
+// Messages for auth
+
+message UpdateAccessTokenRequest {
+  string username = 1;
+  string token = 2;
+}
+
+message GetAccessTokenRequest {
+  string username = 1;
+}
+
+message GetAccessTokenResponse {
+  string token = 1;
+  bool ok = 2;
+}
+
+message UpdateAccessTokenResponse {
+  bool ok = 1;
+}
+
+// Messages for users
+message GetUserRequest {
+  string username = 1;
+}
+
+message User {
+  string name = 1;
+  string password = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+message GetUserResponse {
+  User user = 1;
+  bool ok = 2;
+}
+
+message GetUsersRequest {
+
+}
+
+message GetUsersResponse {
+  map<string, User> users = 1;
+}
+
+message CreateUserRequest {
+  string username = 1;
+  User user = 2;
+}
+
+message CreateUserResponse {
+  bool ok = 1;
+}
+
+// DSL Service
+
+service DataService {
+  // Services related to posts
+  rpc AddPost(AddPostRequest) returns (AddPostResponse);
+  rpc GetPosts(GetPostsRequest) returns (GetPostsResponse);
+
+  // Services related to subscriptions
+  rpc GetSubscriptions(GetSubscriptionsRequest) returns (GetSubscriptionsResponse);
+  rpc Subscribe(SubscribeRequest) returns (SubscribeResponse);
+  rpc Unsubscribe(SubscribeRequest) returns (SubscribeResponse);
+
+  // Services related to auth
+  rpc SetAccessToken(UpdateAccessTokenRequest) returns (UpdateAccessTokenResponse);
+  rpc GetAccessToken(GetAccessTokenRequest) returns (GetAccessTokenResponse);
+  rpc DeleteAccessToken(UpdateAccessTokenRequest) returns (UpdateAccessTokenResponse);
+
+  // Services related to users
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  rpc GetUsers(GetUsersRequest) returns (GetUsersResponse);
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+}

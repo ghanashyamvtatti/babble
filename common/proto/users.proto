@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package userproto;
+package proto;
 
 
 option go_package = "example.com/foo/bar";
