@@ -3,13 +3,15 @@ package services
 import (
 	"ds-project/config"
 	"ds-project/models"
-	"time"
+	"sort"
 	"sync"
+	"time"
 )
 
 var (
 	mutex sync.Mutex
 )
+
 func AddPost(appConfig *config.ApplicationConfig, username string, post string) {
 	mutex.Lock()
 	newPost := &models.Post{
@@ -23,7 +25,11 @@ func AddPost(appConfig *config.ApplicationConfig, username string, post string) 
 }
 
 func GetPostsForUser(appConfig *config.ApplicationConfig, username string) []*models.Post {
-	return appConfig.Posts[username]
+	posts := appConfig.Posts[username]
+	sort.Slice(posts, func(i, j int) bool {
+		return posts[i].CreatedAt.After(posts[j].CreatedAt)
+	})
+	return posts
 }
 
 func GetFeedForUsername(appConfig *config.ApplicationConfig, username string) []*models.Post {
@@ -33,6 +39,8 @@ func GetFeedForUsername(appConfig *config.ApplicationConfig, username string) []
 	for _, subscription := range subscriptions {
 		posts = append(posts, GetPostsForUser(appConfig, subscription)...)
 	}
-
+	sort.Slice(posts, func(i, j int) bool {
+		return posts[i].CreatedAt.After(posts[j].CreatedAt)
+	})
 	return posts
 }
