@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import { changePage, loadSubscriptionDetails, loadUserDetails, signOutProcess } from "../../actions/actions";
 import { FEED, SUBSCRIPTION } from "../../pages";
 import "./Navbar.css";
+import { cursor } from "sisteransi";
 
 const { Header } = Layout;
 const { Title } = Typography;
@@ -76,7 +77,7 @@ class Navbar extends Component {
     return (
       <Header style={{ position: "fixed", zIndex: 1, width: "100%" }}>
         <div className="logo">
-          <Title style={{ color: "#fff" }}>Babble</Title>
+          <Title  onClick={this.goToFeed} style={{ color: "#fff", cursor: "pointer" }}>Babble</Title>
         </div>
         {this.conditionallyRenderMenu(this.props.token)}
       </Header>
