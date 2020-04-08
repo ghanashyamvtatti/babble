@@ -22,7 +22,7 @@ func main() {
 	}
 
 
-	// ctx := context.WithValue(context.Background(), "appConfig", appConfig)
+	// ctx := context.WithValue(context.Backgqround(), "appConfig", appConfig)
 	appConfig := config.NewAppConfig()
 	users := services.GetAllUsers(appConfig)
 	log.Printf(string(len(users)))
