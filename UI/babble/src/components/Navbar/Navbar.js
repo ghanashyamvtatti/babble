@@ -11,8 +11,12 @@ const { Title } = Typography;
 class Navbar extends Component {
   constructor(props) {
     super(props);
+    let selectedKeys = ["1"]
+    if (this.props.page === SUBSCRIPTION) {
+      selectedKeys = ["2"]
+    }
     this.state = {
-      selectedKeys: ["1"]
+      selectedKeys: selectedKeys
     };
   }
 
