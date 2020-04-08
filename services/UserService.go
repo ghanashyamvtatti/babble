@@ -1,6 +1,7 @@
 package services
 
 import (
+	"ds-project/DAL"
 	"ds-project/common/utilities"
 	"ds-project/config"
 	"ds-project/dtos"
@@ -22,7 +23,7 @@ func mapUsersToDTO(users map[string]models.User) []*dtos.User {
 }
 
 func CheckUserNameExists(appConfig *config.ApplicationConfig, username string) bool {
-	if _, ok := appConfig.Users[username]; ok {
+	if _, ok := DAL.GetUser(appConfig, username); ok {
 		return true
 	}
 	return false
@@ -33,12 +34,12 @@ func GenerateAccessToken(appConfig *config.ApplicationConfig, username string) s
 	if err != nil {
 		panic(err)
 	}
-	appConfig.Tokens[username] = token.String()
+	DAL.SetAccessToken(appConfig, username, token.String())
 	return token.String()
 }
 
 func CheckAccessTokenValid(appConfig *config.ApplicationConfig, username string, token string) bool {
-	if t, ok := appConfig.Tokens[username]; ok {
+	if t, ok := DAL.GetAccessToken(appConfig, username); ok {
 		if token == t {
 			return true
 		}
@@ -52,10 +53,11 @@ func GetAllUsers(appConfig *config.ApplicationConfig) []*dtos.User {
 		panic(err)
 	}
 	fmt.Println(token)
-	return mapUsersToDTO(appConfig.Users)
+	return mapUsersToDTO(DAL.GetUsers(appConfig))
 }
 
 func CreateUser(appConfig *config.ApplicationConfig, username string, value models.User) dtos.User {
+	DAL.CreateUser(appConfig, username, value)
 	appConfig.Users[username] = value
 
 	return dtos.User{
@@ -65,8 +67,7 @@ func CreateUser(appConfig *config.ApplicationConfig, username string, value mode
 }
 
 func GetUserByUsername(appConfig *config.ApplicationConfig, username string) dtos.User {
-	if CheckUserNameExists(appConfig, username) {
-		user := appConfig.Users[username]
+	if user, ok := DAL.GetUser(appConfig, username); ok {
 		return dtos.User{
 			Username: username,
 			FullName: user.FullName,
@@ -77,8 +78,8 @@ func GetUserByUsername(appConfig *config.ApplicationConfig, username string) dto
 }
 
 func Login(appConfig *config.ApplicationConfig, username string, password string) bool {
-	if p, ok := appConfig.Users[username]; ok {
-		if utilities.CheckPasswordHash(password, p.Password) {
+	if user, ok := DAL.GetUser(appConfig, username); ok {
+		if utilities.CheckPasswordHash(password, user.Password) {
 			return true
 		}
 	}
@@ -86,7 +87,7 @@ func Login(appConfig *config.ApplicationConfig, username string, password string
 }
 
 func Logout(appConfig *config.ApplicationConfig, username string) {
-	if _, ok := appConfig.Tokens[username]; ok {
-		delete(appConfig.Tokens, username)
+	if _, ok := DAL.GetAccessToken(appConfig, username); ok {
+		DAL.DeleteAccessToken(appConfig, username)
 	}
 }

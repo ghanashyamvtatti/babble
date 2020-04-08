@@ -9,6 +9,9 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
-	google.golang.org/grpc v1.28.0
+	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
+	golang.org/x/sys v0.0.0-20200406155108-e3b113bbe6a4 // indirect
+	google.golang.org/genproto v0.0.0-20200406120821-33397c535dc2 // indirect
+	google.golang.org/grpc v1.28.1
 	google.golang.org/protobuf v1.20.1
 )
