@@ -4,6 +4,7 @@ import (
 	"ds-project/DAL"
 	"ds-project/config"
 	"ds-project/models"
+	"sort"
 	"sync"
 )
 
@@ -18,7 +19,11 @@ func AddPost(appConfig *config.ApplicationConfig, username string, post string) 
 }
 
 func GetPostsForUser(appConfig *config.ApplicationConfig, username string) []*models.Post {
-	return DAL.GetPosts(appConfig, username)
+	posts := DAL.GetPosts(appConfig, username)
+	sort.Slice(posts, func(i, j int) bool {
+		return posts[i].CreatedAt.After(posts[j].CreatedAt)
+	})
+	return posts
 }
 
 func GetFeedForUsername(appConfig *config.ApplicationConfig, username string) []*models.Post {
@@ -28,6 +33,8 @@ func GetFeedForUsername(appConfig *config.ApplicationConfig, username string) []
 	for _, subscription := range subscriptions {
 		posts = append(posts, GetPostsForUser(appConfig, subscription)...)
 	}
-
+	sort.Slice(posts, func(i, j int) bool {
+		return posts[i].CreatedAt.After(posts[j].CreatedAt)
+	})
 	return posts
 }

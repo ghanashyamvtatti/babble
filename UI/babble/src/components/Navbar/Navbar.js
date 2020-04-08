@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import { changePage, loadSubscriptionDetails, loadUserDetails, signOutProcess } from "../../actions/actions";
 import { FEED, SUBSCRIPTION } from "../../pages";
 import "./Navbar.css";
+import { cursor } from "sisteransi";
 
 const { Header } = Layout;
 const { Title } = Typography;
@@ -11,8 +12,12 @@ const { Title } = Typography;
 class Navbar extends Component {
   constructor(props) {
     super(props);
+    let selectedKeys = ["1"]
+    if (this.props.page === SUBSCRIPTION) {
+      selectedKeys = ["2"]
+    }
     this.state = {
-      selectedKeys: ["1"]
+      selectedKeys: selectedKeys
     };
   }
 
@@ -72,7 +77,7 @@ class Navbar extends Component {
     return (
       <Header style={{ position: "fixed", zIndex: 1, width: "100%" }}>
         <div className="logo">
-          <Title style={{ color: "#fff" }}>Babble</Title>
+          <Title  onClick={this.goToFeed} style={{ color: "#fff", cursor: "pointer" }}>Babble</Title>
         </div>
         {this.conditionallyRenderMenu(this.props.token)}
       </Header>

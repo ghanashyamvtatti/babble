@@ -31,7 +31,7 @@
 ### UI
 
 (ensure you have yarn or npm installed)
-1. `cd ds-project/UI`
+1. `cd ds-project/UI/babble`
 2. `npm start` or `yarn start`
 3. Open `localhost:3000` in the browser
 
