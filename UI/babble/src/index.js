@@ -8,12 +8,30 @@ import { Provider } from "react-redux";
 import thunk from "redux-thunk";
 import rootReducer from "./reducers/rootReducer";
 import { composeWithDevTools } from "redux-devtools-extension";
+import { persistStore, persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage";
+import { PersistGate } from "redux-persist/integration/react";
+import { Spin } from 'antd';
 
-const store = createStore(rootReducer, composeWithDevTools(applyMiddleware(thunk)));
+const persistConfig = {
+  key: "root",
+  storage
+};
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+const store = createStore(
+  persistedReducer,
+  composeWithDevTools(applyMiddleware(thunk))
+);
+
+let persistor = persistStore(store);
 
 ReactDOM.render(
   <Provider store={store}>
-    <App />
+    <PersistGate loading={<Spin size="large" />} persistor={persistor}>
+      <App />
+    </PersistGate>
   </Provider>,
   document.getElementById("root")
 );
