@@ -1,0 +1,45 @@
+syntax = "proto3";
+package proto;
+
+option go_package = "ds-project/common/proto/auth";
+
+message GenerateTokenRequest {
+  string username = 1;
+}
+
+message GenerateTokenResponse {
+  string token = 1;
+}
+
+message TokenValidityRequest {
+  string username = 1;
+  string token = 2;
+}
+
+message TokenValidityResponse {
+  bool ok = 1;
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  bool ok = 1;
+}
+
+message LogoutRequest {
+  string username = 1;
+}
+
+message LogoutResponse {
+
+}
+
+service AuthService {
+  rpc GenerateAccessToken(GenerateTokenRequest) returns (GenerateTokenResponse);
+  rpc CheckAccessTokenValid(TokenValidityRequest) returns (TokenValidityResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+}

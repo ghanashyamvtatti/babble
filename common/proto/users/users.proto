@@ -1,0 +1,42 @@
+syntax = "proto3";
+package users;
+import "models.proto";
+
+option go_package = "ds-project/common/proto/users";
+
+message GetUsersRequest {
+
+}
+
+message UserExistsResponse {
+  bool ok = 1;
+}
+
+message GetUsersResponse {
+  map<string, models.User> users = 1;
+}
+
+message CreateUserRequest {
+  string username = 1;
+  models.User user = 2;
+}
+
+message CreateUserResponse {
+
+}
+
+message GetUserRequest {
+  string username = 1;
+}
+
+message GetUserResponse {
+  string username = 1;
+  models.User user = 2;
+}
+
+service UserService {
+  rpc CheckUserNameExists(GetUserRequest) returns (UserExistsResponse);
+  rpc GetUsers(GetUsersRequest) returns (GetUsersResponse);
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+}

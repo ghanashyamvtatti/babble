@@ -1,12 +1,13 @@
 /*
 Defines the protocol buffers for the Data Service Layer Server
+cd into the dsl directory and run this
+protoc -I ../models/ -I . dsl.proto --go_out=plugins=grpc:./
  */
 
 syntax = "proto3";
-package proto;
-import "google/protobuf/timestamp.proto";
-
-option go_package = "ds-project/common/proto";
+package dsl;
+import "models.proto";
+option go_package = "ds-project/common/proto/dsl";
 
 // Messages for posts
 
@@ -24,14 +25,7 @@ message GetPostsRequest {
 }
 
 message GetPostsResponse {
-  map<string, Post> posts = 1;
-}
-
-message Post {
-  string post = 1;
-  string username = 2;
-  google.protobuf.Timestamp created_at = 3;
-  google.protobuf.Timestamp updated_at = 4;
+  repeated models.Post posts = 1;
 }
 
 // Messages for subscriptions
@@ -55,12 +49,12 @@ message SubscribeResponse {
 
 // Messages for auth
 
-message UpdateAccessTokenRequest {
+message SetAccessTokenRequest {
   string username = 1;
   string token = 2;
 }
 
-message GetAccessTokenRequest {
+message AccessTokenRequest {
   string username = 1;
 }
 
@@ -78,15 +72,8 @@ message GetUserRequest {
   string username = 1;
 }
 
-message User {
-  string name = 1;
-  string password = 2;
-  google.protobuf.Timestamp created_at = 3;
-  google.protobuf.Timestamp updated_at = 4;
-}
-
 message GetUserResponse {
-  User user = 1;
+  models.User user = 1;
   bool ok = 2;
 }
 
@@ -95,12 +82,12 @@ message GetUsersRequest {
 }
 
 message GetUsersResponse {
-  map<string, User> users = 1;
+  map<string, models.User> users = 1;
 }
 
 message CreateUserRequest {
   string username = 1;
-  User user = 2;
+  models.User user = 2;
 }
 
 message CreateUserResponse {
@@ -120,9 +107,9 @@ service DataService {
   rpc Unsubscribe(SubscribeRequest) returns (SubscribeResponse);
 
   // Services related to auth
-  rpc SetAccessToken(UpdateAccessTokenRequest) returns (UpdateAccessTokenResponse);
-  rpc GetAccessToken(GetAccessTokenRequest) returns (GetAccessTokenResponse);
-  rpc DeleteAccessToken(UpdateAccessTokenRequest) returns (UpdateAccessTokenResponse);
+  rpc SetAccessToken(SetAccessTokenRequest) returns (UpdateAccessTokenResponse);
+  rpc GetAccessToken(AccessTokenRequest) returns (GetAccessTokenResponse);
+  rpc DeleteAccessToken(AccessTokenRequest) returns (UpdateAccessTokenResponse);
 
   // Services related to users
   rpc GetUser(GetUserRequest) returns (GetUserResponse);
