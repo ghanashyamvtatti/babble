@@ -1,16 +1,17 @@
 package controllers
 
 import (
+	"ds-project/common/proto/auth"
+	"ds-project/common/proto/models"
+	"ds-project/common/proto/users"
 	"ds-project/common/utilities"
 	"ds-project/config"
 	"ds-project/dtos"
-	"ds-project/models"
-	"ds-project/services"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-func SignIn(appConfig *config.ApplicationConfig) gin.HandlerFunc {
+func SignIn(clients *config.ServiceClients) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var login dtos.UserLogin
 
@@ -22,17 +23,40 @@ func SignIn(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 			return
 		}
 
-		if services.Login(appConfig, login.Username, login.Password) {
+		response, err := clients.AuthClient.Login(ctx, &auth.LoginRequest{
+			Username: login.Username,
+			Password: login.Password,
+		})
+
+		if err == nil && response.Ok {
+			// Get user
+			userResponse, err := clients.UserClient.GetUser(ctx, &users.GetUserRequest{Username: login.Username})
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, dtos.Response{
+					Status:  false,
+					Message: "Something went wrong while trying to fetch the user",
+					Data:    nil,
+				})
+				return
+			}
+			tokenResponse, err := clients.AuthClient.GenerateAccessToken(ctx, &auth.GenerateTokenRequest{Username: login.Username})
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, dtos.Response{
+					Status:  false,
+					Message: "Something went wrong while trying to generate the access token",
+					Data:    nil,
+				})
+				return
+			}
 			ctx.JSON(http.StatusOK, dtos.Response{
 				Status:  true,
 				Message: "Successfully logged in",
 				Data: gin.H{
-					"user":  services.GetUserByUsername(appConfig, login.Username),
-					"token": services.GenerateAccessToken(appConfig, login.Username),
+					"user":  userResponse.User,
+					"token": tokenResponse.Token,
 				},
 			})
 		} else {
-
 			ctx.JSON(http.StatusInternalServerError, dtos.Response{
 				Status:  false,
 				Message: "Authentication failed",
@@ -42,7 +66,7 @@ func SignIn(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 	}
 }
 
-func SignUp(appConfig *config.ApplicationConfig) gin.HandlerFunc {
+func SignUp(clients *config.ServiceClients) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
 		var registerUser dtos.UserRegistration
@@ -54,7 +78,17 @@ func SignUp(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 			return
 		}
 
-		if !services.CheckUserNameExists(appConfig, registerUser.Username) {
+		resp, err := clients.UserClient.CheckUserNameExists(ctx, &users.GetUserRequest{Username: registerUser.Username})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, dtos.Response{
+				Status:  false,
+				Message: "Something went wrong while trying to check if the user already exists",
+				Data:    nil,
+			})
+			return
+		}
+
+		if !resp.Ok {
 			password, err := utilities.HashPassword(registerUser.Password)
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, dtos.Response{
@@ -64,23 +98,62 @@ func SignUp(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 				})
 				return
 			}
-			services.CreateUser(appConfig, registerUser.Username, models.User{FullName: registerUser.FullName, Password: password})
+			value := models.User{
+				FullName: registerUser.FullName,
+				Password: password,
+			}
+			_, er := clients.UserClient.CreateUser(ctx, &users.CreateUserRequest{Username: registerUser.Username, User: &value})
+			if er != nil {
+				ctx.JSON(http.StatusInternalServerError, dtos.Response{
+					Status:  false,
+					Message: "Unable to create user",
+					Data:    nil,
+				})
+				return
+			}
 		}
 
+		// Get user
+		userResponse, err := clients.UserClient.GetUser(ctx, &users.GetUserRequest{Username: registerUser.Username})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, dtos.Response{
+				Status:  false,
+				Message: "Something went wrong while trying to fetch the user",
+				Data:    nil,
+			})
+			return
+		}
+		tokenResponse, err := clients.AuthClient.GenerateAccessToken(ctx, &auth.GenerateTokenRequest{Username: registerUser.Username})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, dtos.Response{
+				Status:  false,
+				Message: "Something went wrong while trying to generate the access token",
+				Data:    nil,
+			})
+			return
+		}
 		ctx.JSON(http.StatusOK, dtos.Response{
 			Status:  true,
 			Message: "Successfully registered user",
 			Data: gin.H{
-				"user":  services.GetUserByUsername(appConfig, registerUser.Username),
-				"token": services.GenerateAccessToken(appConfig, registerUser.Username),
+				"user":  userResponse.User,
+				"token": tokenResponse.Token,
 			},
 		})
 	}
 }
 
-func SignOut(appConfig *config.ApplicationConfig) gin.HandlerFunc {
+func SignOut(clients *config.ServiceClients) gin.HandlerFunc {
 	return func(context *gin.Context) {
-		services.Logout(appConfig, context.Param("username"))
+		_, err := clients.AuthClient.Logout(context, &auth.LogoutRequest{Username: context.Param("username")})
+		if err != nil {
+			context.JSON(http.StatusInternalServerError, dtos.Response{
+				Status:  false,
+				Message: "Unable to sign the user out",
+				Data:    nil,
+			})
+			return
+		}
 		context.JSON(200, dtos.Response{
 			Status:  true,
 			Message: "Successfully signed out the user",
@@ -89,10 +162,12 @@ func SignOut(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 	}
 }
 
-func Authenticate(appConfig *config.ApplicationConfig) gin.HandlerFunc {
+func Authenticate(clients *config.ServiceClients) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		username := context.Param("username")
-		if ! services.CheckUserNameExists(appConfig, username) {
+		resp, err := clients.UserClient.CheckUserNameExists(context, &users.GetUserRequest{Username: username})
+
+		if err != nil || !(resp.Ok) {
 			context.JSON(500, dtos.Response{
 				Status:  false,
 				Message: "Invalid username",
@@ -100,7 +175,8 @@ func Authenticate(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 			})
 			context.Abort()
 		}
-		if !services.CheckAccessTokenValid(appConfig, username, context.GetHeader("token")) {
+		validityResp, err := clients.AuthClient.CheckAccessTokenValid(context, &auth.TokenValidityRequest{Username: username, Token: context.GetHeader("token")})
+		if err != nil || !validityResp.Ok {
 			context.JSON(http.StatusUnauthorized, dtos.Response{
 				Status:  false,
 				Message: "Missing or invalid access token",
