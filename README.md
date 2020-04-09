@@ -4,7 +4,7 @@
 
 ```
 .
-├── common                  # Contains utilities common to the entire project
+├── common                  # Contains utilities and protobufs common to the entire project
 ├── config                  # Application session level data structures and their initial values
 ├── models                  # Individual data structures (users and posts)
 ├── services                # Services layer code for user auth, subscriptions and posts
@@ -18,6 +18,19 @@
 ├── .gitignore
 └── README.md
 ```
+
+## Ports
+
+| Server               | Port |
+|----------------------|------|
+| Auth Server          | 3004 |
+| Data Server          | 3001 |
+| Posts Server         | 3003 |
+| Users Server         | 3002 |
+| Subscriptions Server | 3005 |
+| UI                   | 3000 |
+| API Gateway          | 8080 |
+ 
 ## Setup
 
 ### Backend
