@@ -1,17 +1,17 @@
 package DAL
 
 import (
+	"ds-project/common/proto/models"
 	"ds-project/config"
-	"ds-project/models"
-	"time"
+	"github.com/golang/protobuf/ptypes"
 )
 
 func AddPost(appConfig *config.ApplicationConfig, username string, post string) bool {
 	newPost := &models.Post{
 		Post:      post,
 		Username:  username,
-		CreatedAt: time.Now(),
-		UpdateAt:  time.Now(),
+		CreatedAt: ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
 	}
 	appConfig.Posts[username] = append(appConfig.Posts[username], newPost)
 
