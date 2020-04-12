@@ -1,5 +1,5 @@
 package controllers
-
+/*
 import (
 	"ds-project/config"
 	"ds-project/dtos"
@@ -63,4 +63,4 @@ func GetSubscriptions(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 			},
 		})
 	}
-}
+}*/

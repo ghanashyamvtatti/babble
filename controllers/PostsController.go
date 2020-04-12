@@ -1,9 +1,8 @@
 package controllers
-
+/*
 import (
 	"ds-project/config"
 	"ds-project/dtos"
-	"ds-project/services"
 	"github.com/gin-gonic/gin"
 )
 
@@ -55,3 +54,4 @@ func CreatePost(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 		})
 	}
 }
+*/
