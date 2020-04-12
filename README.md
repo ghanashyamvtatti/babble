@@ -30,6 +30,9 @@
 | Subscriptions Server | 3005 |
 | UI                   | 3000 |
 | API Gateway          | 8080 |
+
+Each micro-service will be interacting with its own key-val pair in the raft implementation we'll use in stage 3
+So the data server is currently emulating etcd/raft.
  
 ## Setup
 
