@@ -52,7 +52,10 @@ func SignIn(clients *config.ServiceClients) gin.HandlerFunc {
 				Status:  true,
 				Message: "Successfully logged in",
 				Data: gin.H{
-					"user":  userResponse.User,
+					"user": dtos.User{
+						Username: userResponse.Username,
+						FullName: userResponse.User.FullName,
+					},
 					"token": tokenResponse.Token,
 				},
 			})
@@ -136,7 +139,10 @@ func SignUp(clients *config.ServiceClients) gin.HandlerFunc {
 			Status:  true,
 			Message: "Successfully registered user",
 			Data: gin.H{
-				"user":  userResponse.User,
+				"user": dtos.User{
+					Username: userResponse.Username,
+					FullName: userResponse.User.FullName,
+				},
 				"token": tokenResponse.Token,
 			},
 		})
