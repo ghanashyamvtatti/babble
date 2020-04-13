@@ -84,21 +84,21 @@ func SetupRouter() *gin.Engine {
 		authorization.POST("/sign-in", controllers.SignIn(&clients))
 		authorization.POST("/user/:username/sign-out", controllers.SignOut(&clients))
 	}
-	/*
-		// Social group
-		social := router.Group("/social/user/:username")
-		{
-			social.Use(controllers.Authenticate(&clients))
-			social.GET("/", controllers.GetUserDetails(appConfig))
-			social.GET("/feed", controllers.GetUserFeed(appConfig))
-			social.GET("/post", controllers.GetUserPosts(appConfig))
-			social.POST("/post", controllers.CreatePost(appConfig))
-			social.POST("/subscribe/:publisher", controllers.Subscribe(appConfig))
-			social.DELETE("/subscribe/:publisher", controllers.Unsubscribe(appConfig))
-			social.GET("/subscriptions", controllers.GetSubscriptions(appConfig))
-		}
-		// Get all users
-		router.GET("/social/user", controllers.GetUsers(userClient))*/
+
+	// Social group
+	social := router.Group("/social/user/:username")
+	{
+		social.Use(controllers.Authenticate(&clients))
+		social.GET("/", controllers.GetUserDetails(&clients))
+		/*social.GET("/feed", controllers.GetUserFeed(appConfig))
+		social.GET("/post", controllers.GetUserPosts(appConfig))
+		social.POST("/post", controllers.CreatePost(appConfig))
+		social.POST("/subscribe/:publisher", controllers.Subscribe(appConfig))
+		social.DELETE("/subscribe/:publisher", controllers.Unsubscribe(appConfig))
+		social.GET("/subscriptions", controllers.GetSubscriptions(appConfig))*/
+	}
+	// Get all users
+	router.GET("/social/user", controllers.GetUsers(&clients))
 
 	return router
 
