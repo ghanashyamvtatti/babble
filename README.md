@@ -6,8 +6,7 @@
 .
 ├── common                  # Contains utilities and protobufs common to the entire project
 ├── config                  # Application session level data structures and their initial values
-├── models                  # Individual data structures (users and posts)
-├── services                # Services layer code for user auth, subscriptions and posts
+├── servers                 # Contains gRPC servers for Auth, User, Post, Subscription and Data services
 ├── controllers             # Controllers for the various endpoints defined in web.go
 ├── dtos                    # Data Transfer Objects (shapes the data in the format expected by the UI)
 ├── UI                      # ReactJS based UI
@@ -36,20 +35,21 @@ So the data server is currently emulating etcd/raft.
  
 ## Setup
 
-### Backend
+### UI setup
 
+(ensure you have yarn or npm installed)
+1. `cd ds-project/UI/babble`
+2. `npm install` or `yarn install`
+
+### Running everythin
 1. `cd` into your GOPATH
 2. `git clone https://github.com/Distributed-Systems-CSGY9223/vo383-ppr239-gvt217-final-project ds-project`
 3. `cd ds-project`
 4. `go build ds-project`
-5. `go run web.go`
-
-### UI
-
-(ensure you have yarn or npm installed)
-1. `cd ds-project/UI/babble`
-2. `npm start` or `yarn start`
-3. Open `localhost:3000` in the browser
+5. Running everything:
+    * If you're using Windows, run `runme.bat`
+    * If you're using MacOS/Linux, run `runme.sh` 
+6. Open `localhost:3000` in the browser
 
 ## Description
 
