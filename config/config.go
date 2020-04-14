@@ -66,45 +66,45 @@ func NewAppConfig() *ApplicationConfig {
 		Post:      "Knock Knock. Anybody there?",
 		Username:  "ghanu",
 		CreatedAt: ptypes.TimestampNow(),
-		UpdatedAt:  ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
 	})
 
 	appConfig.Posts["varun"] = append(appConfig.Posts["varun"], &models.Post{
 		Post:      "My name is Varun.",
 		Username:  "varun",
 		CreatedAt: ptypes.TimestampNow(),
-		UpdatedAt:  ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
 	})
 	appConfig.Posts["varun"] = append(appConfig.Posts["varun"], &models.Post{
 		Post:      "I hope this application works well",
 		Username:  "varun",
 		CreatedAt: ptypes.TimestampNow(),
-		UpdatedAt:  ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
 	})
 	appConfig.Posts["varun"] = append(appConfig.Posts["varun"], &models.Post{
 		Post:      "Hey! I'm here!",
 		Username:  "varun",
 		CreatedAt: ptypes.TimestampNow(),
-		UpdatedAt:  ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
 	})
 
 	appConfig.Posts["pratik"] = append(appConfig.Posts["pratik"], &models.Post{
 		Post:      "Pratik is here!",
 		Username:  "pratik",
 		CreatedAt: ptypes.TimestampNow(),
-		UpdatedAt:  ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
 	})
 	appConfig.Posts["pratik"] = append(appConfig.Posts["pratik"], &models.Post{
 		Post:      "I wonder what time it is in Mars",
 		Username:  "pratik",
 		CreatedAt: ptypes.TimestampNow(),
-		UpdatedAt:  ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
 	})
 	appConfig.Posts["pratik"] = append(appConfig.Posts["pratik"], &models.Post{
 		Post:      "lorem ipsum",
 		Username:  "pratik",
 		CreatedAt: ptypes.TimestampNow(),
-		UpdatedAt:  ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
 	})
 
 	// Subscriptions

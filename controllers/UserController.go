@@ -9,19 +9,6 @@ import (
 	"net/http"
 )
 
-//
-//import (
-//	userproto "ds-project-bak/Common/Proto/Users"
-//	"ds-project/common/proto/dsl"
-//	"ds-project/config"
-//	"ds-project/common/proto"
-//	"ds-project/dtos"
-//	"ds-project/services"
-//	"github.com/gin-gonic/gin"
-//	"net/http"
-//)
-//
-
 func mapUsersToDTO(users map[string]*models.User) []*dtos.User {
 	var data []*dtos.User
 	for username, user := range users {
