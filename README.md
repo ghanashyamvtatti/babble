@@ -34,22 +34,17 @@ Each micro-service will be interacting with its own key-val pair in the raft imp
 So the data server is currently emulating etcd/raft.
  
 ## Setup
-
-### UI setup
-
 (ensure you have yarn or npm installed)
-1. `cd ds-project/UI/babble`
-2. `npm install` or `yarn install`
-
-### Running everythin
 1. `cd` into your GOPATH
 2. `git clone https://github.com/Distributed-Systems-CSGY9223/vo383-ppr239-gvt217-final-project ds-project`
-3. `cd ds-project`
-4. `go build ds-project`
-5. Running everything:
+3. `cd ds-project/UI/babble`
+5. `npm install` or `yarn install`
+6. `cd ../..`
+7. `go build ds-project`
+8. Running everything:
     * If you're using Windows, run `runme.bat`
     * If you're using MacOS/Linux, run `runme.sh` 
-6. Open `localhost:3000` in the browser
+9. Open `localhost:3000` in the browser
 
 ## Description
 
