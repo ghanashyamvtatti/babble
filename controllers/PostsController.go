@@ -39,9 +39,10 @@ func GetUserFeed(clients *config.ServiceClients) gin.HandlerFunc {
 
 func GetUserPosts(clients *config.ServiceClients) gin.HandlerFunc {
 	return func(context *gin.Context) {
-
+		username := context.Param("username")
+		username = context.DefaultQuery("username", username)
 		response, err := clients.PostClient.GetPosts(context, &posts.GetPostsRequest{
-			Username: context.Param("username"),
+			Username: username,
 		})
 
 		if err != nil {
