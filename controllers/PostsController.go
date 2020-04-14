@@ -1,6 +1,5 @@
 package controllers
 
-
 import (
 	"ds-project/common/proto/posts"
 	//"ds-project/common/proto/models"
@@ -32,7 +31,7 @@ func GetUserFeed(clients *config.ServiceClients) gin.HandlerFunc {
 			Status:  true,
 			Message: "Successfully fetched user posts",
 			Data: gin.H{
-				"posts": response.Posts,
+				"feed": response.Posts,
 			},
 		})
 	}
@@ -68,7 +67,7 @@ func CreatePost(clients *config.ServiceClients) gin.HandlerFunc {
 	return func(context *gin.Context) {
 
 		var post dtos.Post
-		if context.ShouldBind(&post) == nil {
+		if context.ShouldBind(&post) != nil {
 			context.JSON(500, dtos.Response{
 				Status:  false,
 				Message: "Invalid request json",
@@ -79,7 +78,7 @@ func CreatePost(clients *config.ServiceClients) gin.HandlerFunc {
 
 		response, err := clients.PostClient.AddPost(context, &posts.AddPostRequest{
 			Username: context.Param("username"),
-			Post: post.Post,
+			Post:     post.Post,
 		})
 
 		if err == nil && response.Ok {
@@ -89,13 +88,13 @@ func CreatePost(clients *config.ServiceClients) gin.HandlerFunc {
 				Message: "Successfully added post",
 				Data:    nil,
 			})
+		} else {
+			context.JSON(500, dtos.Response{
+				Status:  false,
+				Message: "add post failure",
+				Data:    nil,
+			})
 		}
-		context.JSON(500, dtos.Response{
-			Status:  false,
-			Message: "add post failure",
-			Data:    nil,
-		})
-		context.Abort()
 	}
 }
 
