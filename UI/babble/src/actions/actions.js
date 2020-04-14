@@ -190,13 +190,14 @@ export const loadUserProfile = payload => ({
   payload
 });
 
-export function loadUserDetails(token, username) {
-  console.log(token, username);
+export function loadUserDetails(token, me, username) {
+  console.log(token, me, username);
 
   return async function(dispatch) {
     const resp = await fetch(
-      "http://localhost:8080/social/user/" + username + "/",
+      "http://localhost:8080/social/user/" + me + "/?username=" + username,
       {
+        method: "GET",
         headers: {
           token: token
         }
@@ -207,7 +208,7 @@ export function loadUserDetails(token, username) {
       console.log(res);
       var user = res.Data.user;
       const postResp = await fetch(
-        "http://localhost:8080/social/user/" + username + "/post",
+        "http://localhost:8080/social/user/" + me + "/post?username=" + username,
         {
           headers: {
             token: token

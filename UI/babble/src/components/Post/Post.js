@@ -1,7 +1,16 @@
 import { Avatar, Card, Comment, Tooltip } from "antd";
 import React, { Component } from "react";
+import { loadUserDetails } from "../../actions/actions.js";
+import { connect } from "react-redux";
 
 class Post extends Component {
+  goToUserPage = () => {
+    this.props.loadUserDetails(
+      this.props.token,
+      this.props.me,
+      this.props.Username
+    );
+  };
   render() {
     return (
       <Card
@@ -20,7 +29,7 @@ class Post extends Component {
           // eslint-disable-next-line jsx-a11y/anchor-is-valid
           author={<a>{this.props.Username}</a>}
           avatar={
-            <Avatar alt={this.props.Username}>
+            <Avatar alt={this.props.Username} onClick={this.goToUserPage}>
               {this.props.Username[0].toUpperCase()}
             </Avatar>
           }
@@ -39,5 +48,8 @@ class Post extends Component {
     );
   }
 }
-
-export default Post;
+const mapStateToProps = state => ({
+  token: state.token,
+  me: state.me.username
+});
+export default connect(mapStateToProps, { loadUserDetails })(Post);
