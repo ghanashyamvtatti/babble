@@ -1,17 +1,15 @@
 package main
+
 import (
-   "testing"
-   // "ds-project/config"
-   "ds-project/common/proto/users"
-   // "context"
-   // "sync"
-   "log"
-   "google.golang.org/grpc"
-   "github.com/gin-gonic/gin"
+	"context"
+	"ds-project/common/proto/users"
+	"google.golang.org/grpc"
+	"testing"
+	// "sync"
+	"log"
 )
 
-
-func TestUserNameExists(t *testing.T){
+func TestUserNameExists(t *testing.T) {
 	log.Println("Testing user name exists")
 
 	userConnection, err := grpc.Dial("localhost:3002", grpc.WithInsecure())
@@ -21,9 +19,8 @@ func TestUserNameExists(t *testing.T){
 	userClient := users.NewUserServiceClient(userConnection)
 
 	// appConfig := config.NewAppConfig()
-	var cont *gin.Context
 	// ctx := cont
-	resp, err := userClient.CheckUserNameExists(cont, &users.GetUserRequest{Username: "varun"})
+	resp, err := userClient.CheckUserNameExists(context.Background(), &users.GetUserRequest{Username: "varun"})
 
 	if err != nil {
 		log.Println(err)
@@ -32,13 +29,12 @@ func TestUserNameExists(t *testing.T){
 
 	log.Println("HERE")
 	log.Println(resp.Ok)
-	
+
 	// exists := services.CheckUserNameExists(appConfig, "varun")
 	// if !exists {
 	// 	
 	// }
 }
-
 
 // func TestTokenValid(t *testing.T){
 // 	log.Println("Testing user name exists")
@@ -56,7 +52,7 @@ func TestUserNameExists(t *testing.T){
 // 	posts := services.GetPostsForUser(appConfig, "varun")
 
 // 	log.Println(posts[0].Post)
-	
+
 // 	if posts[0].Post != "My name is Varun."{
 // 		t.Error("fails")
 // 	}
@@ -70,12 +66,11 @@ func TestUserNameExists(t *testing.T){
 // 	posts := services.GetPostsForUser(appConfig, "varun")
 // 	size := len(posts)
 // 	log.Println(posts[size-1].Post)
-	
+
 // 	if posts[size-1].Post != "New POST"{
 // 		t.Error("fails")
 // 	}
 // }
-
 
 // func TestMultiplePost(t *testing.T) {
 // 	log.Println("Testing add multiple post service")
@@ -98,7 +93,7 @@ func TestUserNameExists(t *testing.T){
 // 	wg.Wait()
 // 	finalPosts := services.GetPostsForUser(appConfig, "varun")
 // 	finalPostsLength := len(finalPosts)
-	
+
 // 	log.Println(initialPostsLength)
 // 	log.Println(finalPostsLength)
 
@@ -107,19 +102,17 @@ func TestUserNameExists(t *testing.T){
 // 	}
 // }
 
-
 // func TestGetFeedForUsers(t *testing.T){
 // 	log.Println("Testing get post service")
 // 	appConfig := config.NewAppConfig()
 // 	feeds := services.GetFeedForUsername(appConfig, "varun")
 
 // 	log.Println(feeds[0].Post)
-	
+
 // 	if len(feeds) == 0 {
 // 		t.Error("fails")
 // 	}
 // }
-
 
 // func TestSubscriptions(t *testing.T){
 // 	log.Println("Testing get subscription service")
@@ -127,12 +120,11 @@ func TestUserNameExists(t *testing.T){
 // 	subscriptions := services.GetSubscriptionsForUsername(appConfig, "varun")
 
 // 	log.Println(subscriptions)
-	
+
 // 	if len(subscriptions) == 0 {
 // 		t.Error("fails")
 // 	}
 // }
-
 
 // func TestAddSubscriptions(t *testing.T){
 // 	log.Println("Testing subscribe service")
@@ -142,12 +134,11 @@ func TestUserNameExists(t *testing.T){
 // 	subscriptions := services.GetSubscriptionsForUsername(appConfig, "varun")
 
 // 	log.Println(subscriptions)
-	
+
 // 	if subscriptions[len(subscriptions)-1] != "ghanu" {
 // 		t.Error("fails")
 // 	}
 // }
-
 
 // func TestRemoveSubscriptions(t *testing.T){
 // 	log.Println("Testing subscribe service")
@@ -157,7 +148,7 @@ func TestUserNameExists(t *testing.T){
 // 	subscriptions := services.GetSubscriptionsForUsername(appConfig, "varun")
 
 // 	log.Println(subscriptions)
-	
+
 // 	if subscriptions[len(subscriptions)-1] == "ghanu" {
 // 		t.Error("fails")
 // 	}
