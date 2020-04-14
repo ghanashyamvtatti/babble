@@ -1,7 +1,7 @@
-import React, { Component } from "react";
-import { Affix, Button, Modal, Input } from "antd";
-import { connect } from "react-redux";
 import { PlusOutlined } from "@ant-design/icons";
+import { Affix, Button, Input, Modal } from "antd";
+import React, { Component } from "react";
+import { connect } from "react-redux";
 import { addPostProcess } from "../../actions/actions";
 
 const { TextArea } = Input;
@@ -25,7 +25,11 @@ class AddPost extends Component {
       ModalText: "Posting...",
       confirmLoading: true
     });
-    this.props.addPostProcess(this.props.token, this.props.username, this.state.postText);
+    this.props.addPostProcess(
+      this.props.token,
+      this.props.username,
+      this.state.postText
+    );
     setTimeout(() => {
       this.setState({
         visible: false,
@@ -50,7 +54,10 @@ class AddPost extends Component {
           onOk={this.handleOk}
           onCancel={this.handleCancel}
         >
-            <TextArea rows={4} onChange={event => this.setState({postText: event.target.value})} />
+          <TextArea
+            rows={4}
+            onChange={event => this.setState({ postText: event.target.value })}
+          />
         </Modal>
         <Affix offsetBottom={150}>
           <Button
@@ -68,8 +75,8 @@ class AddPost extends Component {
 }
 
 const mapStateToProps = state => ({
-    username: state.me.username,
-    token: state.token
-  });
+  username: state.me.username,
+  token: state.token
+});
 
-  export default connect(mapStateToProps, { addPostProcess })(AddPost);
+export default connect(mapStateToProps, { addPostProcess })(AddPost);

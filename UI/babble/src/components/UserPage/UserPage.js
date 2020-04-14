@@ -1,6 +1,6 @@
+import { Typography } from "antd";
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import { Typography } from "antd";
 import { loadFeedData } from "../../actions/actions";
 import Post from "../Post/Post";
 

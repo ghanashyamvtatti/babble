@@ -1,34 +1,34 @@
 import { Layout } from "antd";
 import React, { Component } from "react";
+import { connect } from "react-redux";
 import "./App.css";
-import Navbar from "./components/Navbar/Navbar";
 import Feed from "./components/Feed/Feed";
+import Navbar from "./components/Navbar/Navbar";
 import SignIn from "./components/SignIn/SignIn";
 import SignUp from "./components/SignUp/SignUp";
-import { connect } from "react-redux";
-import { FEED, LOGIN, SIGNUP, USER, SUBSCRIPTION } from "./pages";
-import UserPage from "./components/UserPage/UserPage";
 import Subscription from "./components/Subscription/Subscription";
+import UserPage from "./components/UserPage/UserPage";
+import { FEED, LOGIN, SIGNUP, SUBSCRIPTION, USER } from "./pages";
 
 const { Footer, Content } = Layout;
 
 class App extends Component {
-  renderPage = (page) => {
+  renderPage = page => {
     switch (page) {
       case LOGIN:
-        return (<SignIn />);
+        return <SignIn />;
       case SIGNUP:
-        return (<SignUp />);
+        return <SignUp />;
       case FEED:
-        return (<Feed />);
+        return <Feed />;
       case USER:
-        return (<UserPage />);
+        return <UserPage />;
       case SUBSCRIPTION:
-        return (<Subscription />);
+        return <Subscription />;
       default:
-        return (<SignIn />);
+        return <SignIn />;
     }
-  }
+  };
   render() {
     return (
       <Layout className="App">

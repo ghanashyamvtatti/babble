@@ -1,13 +1,13 @@
 import {
+  ADD_POST,
+  CHANGE_PAGE,
+  LOAD_FEED,
+  LOAD_PROFILE,
+  LOAD_SUBSCRIPTIONS,
+  LOAD_USERS,
   SIGN_IN,
   SIGN_OUT,
-  LOAD_FEED,
-  LOAD_SUBSCRIPTIONS,
-  LOAD_PROFILE,
-  ADD_POST,
-  SIGN_UP,
-  CHANGE_PAGE,
-  LOAD_USERS
+  SIGN_UP
 } from "../actions/actions";
 import { LOGIN } from "../pages";
 

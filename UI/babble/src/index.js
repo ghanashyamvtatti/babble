@@ -1,17 +1,17 @@
+import { Spin } from "antd";
 import React from "react";
 import ReactDOM from "react-dom";
-import "./index.css";
-import App from "./App";
-import * as serviceWorker from "./serviceWorker";
-import { createStore, applyMiddleware } from "redux";
 import { Provider } from "react-redux";
-import thunk from "redux-thunk";
-import rootReducer from "./reducers/rootReducer";
+import { applyMiddleware, createStore } from "redux";
 import { composeWithDevTools } from "redux-devtools-extension";
-import { persistStore, persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage";
+import { persistReducer, persistStore } from "redux-persist";
 import { PersistGate } from "redux-persist/integration/react";
-import { Spin } from 'antd';
+import storage from "redux-persist/lib/storage";
+import thunk from "redux-thunk";
+import App from "./App";
+import "./index.css";
+import rootReducer from "./reducers/rootReducer";
+import * as serviceWorker from "./serviceWorker";
 
 const persistConfig = {
   key: "root",

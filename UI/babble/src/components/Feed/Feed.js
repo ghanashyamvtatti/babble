@@ -1,9 +1,8 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-
 import { loadFeedData } from "../../actions/actions";
-import Post from "../Post/Post";
 import AddPost from "../AddPost/AddPost";
+import Post from "../Post/Post";
 
 class Feed extends Component {
   componentDidMount() {

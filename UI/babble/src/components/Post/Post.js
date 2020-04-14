@@ -1,7 +1,7 @@
 import { Avatar, Card, Comment, Tooltip } from "antd";
 import React, { Component } from "react";
-import { loadUserDetails } from "../../actions/actions.js";
 import { connect } from "react-redux";
+import { loadUserDetails } from "../../actions/actions.js";
 
 class Post extends Component {
   goToUserPage = () => {
