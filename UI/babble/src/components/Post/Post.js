@@ -1,6 +1,5 @@
 import { Avatar, Card, Comment, Tooltip } from "antd";
 import React, { Component } from "react";
-import moment from "moment";
 
 class Post extends Component {
   render() {
@@ -28,12 +27,10 @@ class Post extends Component {
           content={<p>{this.props.Post}</p>}
           datetime={
             <Tooltip
-              title={moment(this.props.CreatedAt).format(
-                "MMMM Do YY, h:mm:ss a"
-              )}
+              title={new Date(this.props.CreatedAt * 1000).toLocaleString()}
             >
               <span>
-                {moment(this.props.CreatedAt).format("MMMM Do YY, h:mm:ss a")}
+                {new Date(this.props.CreatedAt * 1000).toLocaleString()}
               </span>
             </Tooltip>
           }

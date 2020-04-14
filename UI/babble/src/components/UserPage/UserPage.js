@@ -15,9 +15,9 @@ class UserPage extends Component {
           return (
             <Post
               key={index}
-              Username={post.Username}
-              Post={post.Post}
-              CreatedAt={post.CreatedAt}
+              Username={post.username}
+              Post={post.post}
+              CreatedAt={post.created_at}
             />
           );
         })}
