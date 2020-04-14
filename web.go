@@ -93,9 +93,9 @@ func SetupRouter() *gin.Engine {
 		social.GET("/feed", controllers.GetUserFeed(&clients))
 		social.GET("/post", controllers.GetUserPosts(&clients))
 		social.POST("/post", controllers.CreatePost(&clients))
-		/*social.POST("/subscribe/:publisher", controllers.Subscribe(appConfig))
-		social.DELETE("/subscribe/:publisher", controllers.Unsubscribe(appConfig))
-		social.GET("/subscriptions", controllers.GetSubscriptions(appConfig))*/
+		social.POST("/subscribe/:publisher", controllers.Subscribe(&clients))
+		social.DELETE("/subscribe/:publisher", controllers.Unsubscribe(&clients))
+		social.GET("/subscriptions", controllers.GetSubscriptions(&clients))
 	}
 	// Get all users
 	router.GET("/social/user", controllers.GetUsers(&clients))
