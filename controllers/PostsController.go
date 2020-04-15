@@ -2,13 +2,9 @@ package controllers
 
 import (
 	"ds-project/common/proto/posts"
-	//"ds-project/common/proto/models"
-	//"ds-project/common/proto/users"
-	//"ds-project/common/utilities"
 	"ds-project/config"
 	"ds-project/dtos"
 	"github.com/gin-gonic/gin"
-	// "net/http"
 )
 
 func GetUserFeed(clients *config.ServiceClients) gin.HandlerFunc {
