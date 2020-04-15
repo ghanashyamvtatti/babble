@@ -2,7 +2,7 @@ import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { Button, Form, Input } from "antd";
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import { signInProcess, changePage } from "../../actions/actions";
+import { changePage, signInProcess } from "../../actions/actions";
 import { SIGNUP } from "../../pages";
 import "./SignIn.css";
 

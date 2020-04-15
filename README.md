@@ -1,5 +1,53 @@
 # Distributed Systems: Final Project
 
+## Project Structure
+
+```
+.
+├── common                  # Contains utilities and protobufs common to the entire project
+├── config                  # Application session level data structures and their initial values
+├── servers                 # Contains gRPC servers for Auth, User, Post, Subscription and Data services
+├── controllers             # Controllers for the various endpoints defined in web.go
+├── dtos                    # Data Transfer Objects (shapes the data in the format expected by the UI)
+├── UI                      # ReactJS based UI
+├── web.go                  # Contains the gin routes 
+├── route_testing.go        # Integration tests
+├── service_test.go         # Service tests 
+├── go.mod
+├── .gitignore
+└── README.md
+```
+
+## Ports
+
+| Server               | Port |
+|----------------------|------|
+| Auth Server          | 3004 |
+| Data Server          | 3001 |
+| Posts Server         | 3003 |
+| Users Server         | 3002 |
+| Subscriptions Server | 3005 |
+| UI                   | 3000 |
+| API Gateway          | 8080 |
+
+Each micro-service will be interacting with its own key-val pair in the raft implementation we'll use in stage 3
+So the data server is currently emulating etcd/raft.
+ 
+## Setup
+(ensure you have yarn or npm installed)
+1. `cd` into your GOPATH
+2. `git clone https://github.com/Distributed-Systems-CSGY9223/vo383-ppr239-gvt217-final-project ds-project`
+3. `cd ds-project/UI/babble`
+5. `npm install` or `yarn install`
+6. `cd ../..`
+7. `go build ds-project`
+8. Running everything:
+    * If you're using Windows, run `runme.bat`
+    * If you're using MacOS/Linux, run `runme.sh` 
+9. Open `localhost:3000` in the browser
+
+## Description
+
 The project for this course will be to develop (in stages), a distributed, reliable backend in support of a mildly complex (think twitter) social media application.
 
 The development of this project is divided into 3 stages!

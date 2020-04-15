@@ -7,5 +7,5 @@ import (
 type Response struct {
 	Status  bool
 	Message string
-	Data gin.H
+	Data    gin.H
 }

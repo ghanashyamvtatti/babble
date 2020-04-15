@@ -1,9 +1,8 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-
 import { loadFeedData } from "../../actions/actions";
-import Post from "../Post/Post";
 import AddPost from "../AddPost/AddPost";
+import Post from "../Post/Post";
 
 class Feed extends Component {
   componentDidMount() {
@@ -19,9 +18,9 @@ class Feed extends Component {
           return (
             <Post
               key={index}
-              Username={post.Username}
-              Post={post.Post}
-              CreatedAt={post.CreatedAt}
+              Username={post.username}
+              Post={post.post}
+              CreatedAt={post.created_at.seconds}
             />
           );
         })}

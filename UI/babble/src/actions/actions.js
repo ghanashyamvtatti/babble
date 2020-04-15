@@ -65,6 +65,7 @@ export function signOutProcess(username) {
     }
   };
 }
+
 export const loadFeed = payload => ({
   type: LOAD_FEED,
   payload
@@ -111,10 +112,13 @@ export function loadSubscriptionDetails(token, username) {
       }
     );
     const data = await resp.json();
-    
+
     if (data.Status) {
-      if (data.Data.subscriptions === undefined || data.Data.subscriptions == null) {
-        data.Data.subscriptions = []
+      if (
+        data.Data.subscriptions === undefined ||
+        data.Data.subscriptions == null
+      ) {
+        data.Data.subscriptions = [];
         dispatch(loadSubscriptions(data.Data));
       } else {
         dispatch(loadSubscriptions(data.Data));
@@ -190,13 +194,14 @@ export const loadUserProfile = payload => ({
   payload
 });
 
-export function loadUserDetails(token, username) {
-  console.log(token, username);
+export function loadUserDetails(token, me, username) {
+  console.log(token, me, username);
 
   return async function(dispatch) {
     const resp = await fetch(
-      "http://localhost:8080/social/user/" + username + "/",
+      "http://localhost:8080/social/user/" + me + "/?username=" + username,
       {
+        method: "GET",
         headers: {
           token: token
         }
@@ -207,7 +212,10 @@ export function loadUserDetails(token, username) {
       console.log(res);
       var user = res.Data.user;
       const postResp = await fetch(
-        "http://localhost:8080/social/user/" + username + "/post",
+        "http://localhost:8080/social/user/" +
+          me +
+          "/post?username=" +
+          username,
         {
           headers: {
             token: token
@@ -217,7 +225,11 @@ export function loadUserDetails(token, username) {
       const postRes = await postResp.json();
       if (postRes.Status) {
         var posts = postRes.Data.posts;
-        dispatch(loadUserProfile({ user: user, posts: posts }));
+        if (posts === undefined || posts == null) {
+          dispatch(loadUserProfile({ user: user, posts: [] }));
+        } else {
+          dispatch(loadUserProfile({ user: user, posts: posts }));
+        }
         dispatch(changePage(USER));
       } else {
         message.error(postRes.Message);
