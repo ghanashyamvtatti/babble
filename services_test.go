@@ -101,3 +101,46 @@ func TestGetFeedForUsers(t *testing.T){
 		t.Error("fails")
 	}
 }
+
+
+func TestSubscriptions(t *testing.T){
+	log.Println("Testing get subscription service")
+	appConfig := config.NewAppConfig()
+	subscriptions := services.GetSubscriptionsForUsername(appConfig, "varun")
+
+	log.Println(subscriptions)
+	
+	if len(subscriptions) == 0 {
+		t.Error("fails")
+	}
+}
+
+
+func TestAddSubscriptions(t *testing.T){
+	log.Println("Testing subscribe service")
+	appConfig := config.NewAppConfig()
+	services.Subscribe(appConfig, "varun","ghanu")
+
+	subscriptions := services.GetSubscriptionsForUsername(appConfig, "varun")
+
+	log.Println(subscriptions)
+	
+	if subscriptions[len(subscriptions)-1] != "ghanu" {
+		t.Error("fails")
+	}
+}
+
+
+func TestRemoveSubscriptions(t *testing.T){
+	log.Println("Testing subscribe service")
+	appConfig := config.NewAppConfig()
+	services.Unsubscribe(appConfig, "varun","ghanu")
+
+	subscriptions := services.GetSubscriptionsForUsername(appConfig, "varun")
+
+	log.Println(subscriptions)
+	
+	if subscriptions[len(subscriptions)-1] == "ghanu" {
+		t.Error("fails")
+	}
+}
