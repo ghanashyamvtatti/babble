@@ -8,10 +8,11 @@ import (
 	"testing"
 	"sync"
 	"log"
+	"fmt"
 )
 
 func TestUserNameExists(t *testing.T) {
-	log.Println("Testing user name exists")
+	fmt.Println("Testing user name exists")
 
 	userConnection, err := grpc.Dial("localhost:3002", grpc.WithInsecure())
 	if err != nil {
@@ -30,8 +31,49 @@ func TestUserNameExists(t *testing.T) {
 
 }
 
+func TestGetUserExists(t *testing.T) {
+	fmt.Println("Testing user name exists")
+
+	userConnection, err := grpc.Dial("localhost:3002", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+	userClient := users.NewUserServiceClient(userConnection)
+	resp, err := userClient.GetUsers(context.Background(), &users.GetUsersRequest{})
+
+	if err != nil {
+		log.Println(err)
+		t.Error("fails")
+	}
+
+	log.Println("HERE")
+	log.Println(resp.Users)
+
+}
+
+
+func TestGetUserDetails(t *testing.T) {
+	fmt.Println("Testing user name exists")
+
+	userConnection, err := grpc.Dial("localhost:3002", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+	userClient := users.NewUserServiceClient(userConnection)
+	resp, err := userClient.GetUser(context.Background(), &users.GetUserRequest{Username: "varun"})
+
+	if err != nil {
+		log.Println(err)
+		t.Error("fails")
+	}
+
+	log.Println("HERE")
+	log.Println(resp.Username)
+
+}
+
 func TestMultiplePost(t *testing.T) {
-	log.Println("Testing add multiple post service")
+	fmt.Println("Testing add multiple post service")
 
 	postConnection, err := grpc.Dial("localhost:3003", grpc.WithInsecure())
 	if err != nil {
@@ -39,11 +81,6 @@ func TestMultiplePost(t *testing.T) {
 	}
 
 	postClient := posts.NewPostsServiceClient(postConnection)
-
-	// appConfig := config.NewAppConfig()
-	// initialPosts := services.GetPostsForUser(appConfig, "varun")
-	// initialPostsLength := len(initialPosts)
-
 	wg := sync.WaitGroup{}
 	for idx := 0; idx < 10000; idx++ {
 		wg.Add(1)
@@ -68,15 +105,6 @@ func TestMultiplePost(t *testing.T) {
 	}
 
 	wg.Wait()
-	// finalPosts := services.GetPostsForUser(appConfig, "varun")
-	// finalPostsLength := len(finalPosts)
-
-	// log.Println(initialPostsLength)
-	// log.Println(finalPostsLength)
-
-	// if finalPostsLength != initialPostsLength + 1000 {
-	// 	t.Error("fails")
-	// }
 }
 
 // func TestTokenValid(t *testing.T){
