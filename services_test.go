@@ -3,23 +3,22 @@ package main
 import (
 	"context"
 	"ds-project/common/proto/users"
+	"ds-project/common/proto/posts"
 	"google.golang.org/grpc"
 	"testing"
-	// "sync"
+	"sync"
 	"log"
+	"fmt"
 )
 
 func TestUserNameExists(t *testing.T) {
-	log.Println("Testing user name exists")
+	fmt.Println("Testing user name exists")
 
 	userConnection, err := grpc.Dial("localhost:3002", grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}
 	userClient := users.NewUserServiceClient(userConnection)
-
-	// appConfig := config.NewAppConfig()
-	// ctx := cont
 	resp, err := userClient.CheckUserNameExists(context.Background(), &users.GetUserRequest{Username: "varun"})
 
 	if err != nil {
@@ -30,126 +29,115 @@ func TestUserNameExists(t *testing.T) {
 	log.Println("HERE")
 	log.Println(resp.Ok)
 
-	// exists := services.CheckUserNameExists(appConfig, "varun")
-	// if !exists {
-	// 	
-	// }
 }
 
-// func TestTokenValid(t *testing.T){
-// 	log.Println("Testing user name exists")
-// 	appConfig := config.NewAppConfig()
-// 	token := services.GenerateAccessToken(appConfig, "varun")
-// 	if !services.CheckAccessTokenValid(appConfig,"varun",token) {
-// 		t.Error("Fails")
-// 	}
-// 	log.Println("token valid")
-// }
+func TestGetUserExists(t *testing.T) {
+	fmt.Println("Testing user name exists")
 
-// func TestGetPostsForUsers(t *testing.T){
-// 	log.Println("Testing get post service")
-// 	appConfig := config.NewAppConfig()
-// 	posts := services.GetPostsForUser(appConfig, "varun")
+	userConnection, err := grpc.Dial("localhost:3002", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+	userClient := users.NewUserServiceClient(userConnection)
+	resp, err := userClient.GetUsers(context.Background(), &users.GetUsersRequest{})
 
-// 	log.Println(posts[0].Post)
+	if err != nil {
+		log.Println(err)
+		t.Error("fails")
+	}
 
-// 	if posts[0].Post != "My name is Varun."{
-// 		t.Error("fails")
-// 	}
-// }
+	log.Println("HERE")
+	log.Println(resp.Users)
 
-// func TestPostAdd(t *testing.T){
-// 	log.Println("Testing add post service")
-// 	appConfig := config.NewAppConfig()
-// 	services.AddPost(appConfig, "varun", "New POST")
+}
 
-// 	posts := services.GetPostsForUser(appConfig, "varun")
-// 	size := len(posts)
-// 	log.Println(posts[size-1].Post)
 
-// 	if posts[size-1].Post != "New POST"{
-// 		t.Error("fails")
-// 	}
-// }
+func TestGetUserDetails(t *testing.T) {
+	fmt.Println("Testing user name exists")
 
-// func TestMultiplePost(t *testing.T) {
-// 	log.Println("Testing add multiple post service")
+	userConnection, err := grpc.Dial("localhost:3002", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+	userClient := users.NewUserServiceClient(userConnection)
+	resp, err := userClient.GetUser(context.Background(), &users.GetUserRequest{Username: "varun"})
 
-// 	appConfig := config.NewAppConfig()
-// 	initialPosts := services.GetPostsForUser(appConfig, "varun")
-// 	initialPostsLength := len(initialPosts)
+	if err != nil {
+		log.Println(err)
+		t.Error("fails")
+	}
 
-// 	wg := sync.WaitGroup{}
-// 	for idx := 0; idx < 1000; idx++ {
-// 		wg.Add(1)
+	log.Println("HERE")
+	log.Println(resp.Username)
 
-// 		go func(idx int) {
-// 			defer wg.Done()
-// 			p := "New POST " + string(idx)
-// 			services.AddPost(appConfig, "varun", p)
-// 		}(idx)
-// 	}
+}
 
-// 	wg.Wait()
-// 	finalPosts := services.GetPostsForUser(appConfig, "varun")
-// 	finalPostsLength := len(finalPosts)
+func TestMultiplePost(t *testing.T) {
+	fmt.Println("Testing add multiple post service")
 
-// 	log.Println(initialPostsLength)
-// 	log.Println(finalPostsLength)
+	postConnection, err := grpc.Dial("localhost:3003", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
 
-// 	if finalPostsLength != initialPostsLength + 1000 {
-// 		t.Error("fails")
-// 	}
-// }
+	postClient := posts.NewPostsServiceClient(postConnection)
+	wg := sync.WaitGroup{}
+	for idx := 0; idx < 10000; idx++ {
+		wg.Add(1)
 
-// func TestGetFeedForUsers(t *testing.T){
-// 	log.Println("Testing get post service")
-// 	appConfig := config.NewAppConfig()
-// 	feeds := services.GetFeedForUsername(appConfig, "varun")
+		go func(idx int) {
+			defer wg.Done()
 
-// 	log.Println(feeds[0].Post)
 
-// 	if len(feeds) == 0 {
-// 		t.Error("fails")
-// 	}
-// }
+		response, err := postClient.AddPost(context.Background(), &posts.AddPostRequest{
+			Username: "varun",
+			Post:     "New POST :" + string(idx) ,
+		})
 
-// func TestSubscriptions(t *testing.T){
-// 	log.Println("Testing get subscription service")
-// 	appConfig := config.NewAppConfig()
-// 	subscriptions := services.GetSubscriptionsForUsername(appConfig, "varun")
+		if err != nil {
+			log.Println(err)
+			t.Error("fails")
+		}
+		log.Println(response.Ok)
 
-// 	log.Println(subscriptions)
 
-// 	if len(subscriptions) == 0 {
-// 		t.Error("fails")
-// 	}
-// }
+		}(idx)
+	}
 
-// func TestAddSubscriptions(t *testing.T){
-// 	log.Println("Testing subscribe service")
-// 	appConfig := config.NewAppConfig()
-// 	services.Subscribe(appConfig, "varun","ghanu")
+	wg.Wait()
+}
 
-// 	subscriptions := services.GetSubscriptionsForUsername(appConfig, "varun")
 
-// 	log.Println(subscriptions)
+func TestGetFeed(t *testing.T) {
+	fmt.Println("Testing add multiple post service")
 
-// 	if subscriptions[len(subscriptions)-1] != "ghanu" {
-// 		t.Error("fails")
-// 	}
-// }
+	postConnection, err := grpc.Dial("localhost:3003", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
 
-// func TestRemoveSubscriptions(t *testing.T){
-// 	log.Println("Testing subscribe service")
-// 	appConfig := config.NewAppConfig()
-// 	services.Unsubscribe(appConfig, "varun","ghanu")
+	postClient := posts.NewPostsServiceClient(postConnection)
+	// wg := sync.WaitGroup{}
+	// for idx := 0; idx < 10000; idx++ {
+	// 	wg.Add(1)
 
-// 	subscriptions := services.GetSubscriptionsForUsername(appConfig, "varun")
+	// 	go func(idx int) {
+	// 		defer wg.Done()
 
-// 	log.Println(subscriptions)
 
-// 	if subscriptions[len(subscriptions)-1] == "ghanu" {
-// 		t.Error("fails")
-// 	}
-// }
+		response, err := postClient.GetFeed(context.Background(), &posts.GetPostsRequest{
+			Username: "varun",
+		})
+
+		if err != nil {
+			log.Println(err)
+			t.Error("fails")
+		}
+		log.Println(response.Posts)
+
+
+	// 	}(idx)
+	// }
+
+	// wg.Wait()
+}
