@@ -107,6 +107,41 @@ func TestMultiplePost(t *testing.T) {
 	wg.Wait()
 }
 
+
+func TestGetFeed(t *testing.T) {
+	fmt.Println("Testing add multiple post service")
+
+	postConnection, err := grpc.Dial("localhost:3003", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+
+	postClient := posts.NewPostsServiceClient(postConnection)
+	// wg := sync.WaitGroup{}
+	// for idx := 0; idx < 10000; idx++ {
+	// 	wg.Add(1)
+
+	// 	go func(idx int) {
+	// 		defer wg.Done()
+
+
+		response, err := postClient.GetFeed(context.Background(), &posts.GetPostsRequest{
+			Username: "varun",
+		})
+
+		if err != nil {
+			log.Println(err)
+			t.Error("fails")
+		}
+		log.Println(response.Posts)
+
+
+	// 	}(idx)
+	// }
+
+	// wg.Wait()
+}
+
 // func TestTokenValid(t *testing.T){
 // 	log.Println("Testing user name exists")
 // 	appConfig := config.NewAppConfig()
