@@ -121,7 +121,3 @@ func main() {
 		log.Fatalf("failed to serve: %v", err)
 	}
 }
-
-// Define all the DAL methods we might ever require (What the services need)
-
-//
