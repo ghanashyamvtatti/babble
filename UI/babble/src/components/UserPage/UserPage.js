@@ -1,6 +1,6 @@
+import { Typography } from "antd";
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import { Typography } from "antd";
 import { loadFeedData } from "../../actions/actions";
 import Post from "../Post/Post";
 
@@ -15,9 +15,9 @@ class UserPage extends Component {
           return (
             <Post
               key={index}
-              Username={post.Username}
-              Post={post.Post}
-              CreatedAt={post.CreatedAt}
+              Username={post.username}
+              Post={post.post}
+              CreatedAt={post.created_at}
             />
           );
         })}

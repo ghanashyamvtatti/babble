@@ -1,10 +1,14 @@
 import { Avatar, Dropdown, Layout, Menu, Typography } from "antd";
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import { changePage, loadSubscriptionDetails, loadUserDetails, signOutProcess } from "../../actions/actions";
+import {
+  changePage,
+  loadSubscriptionDetails,
+  loadUserDetails,
+  signOutProcess
+} from "../../actions/actions";
 import { FEED, SUBSCRIPTION } from "../../pages";
 import "./Navbar.css";
-import { cursor } from "sisteransi";
 
 const { Header } = Layout;
 const { Title } = Typography;
@@ -12,15 +16,19 @@ const { Title } = Typography;
 class Navbar extends Component {
   constructor(props) {
     super(props);
-    let selectedKeys = ["1"]
+    let selectedKeys = ["1"];
     if (this.props.page === SUBSCRIPTION) {
-      selectedKeys = ["2"]
+      selectedKeys = ["2"];
     }
     this.state = {
       selectedKeys: selectedKeys
     };
   }
-
+  pagesToKeysMap = {
+    SUBSCRIPTION: ["2"],
+    FEED: ["1"],
+    other: []
+  };
   goToLogin = () => {
     this.props.signOutProcess(this.props.username);
   };
@@ -29,7 +37,11 @@ class Navbar extends Component {
     this.setState({ selectedKeys: ["1"] });
   };
   goToMyPage = () => {
-    this.props.loadUserDetails(this.props.token, this.props.username);
+    this.props.loadUserDetails(
+      this.props.token,
+      this.props.username,
+      this.props.username
+    );
     this.setState({ selectedKeys: [] });
   };
   goToSubscriptions = () => {
@@ -53,7 +65,11 @@ class Navbar extends Component {
           theme="dark"
           mode="horizontal"
           defaultSelectedKeys={["1"]}
-          selectedKeys={this.state.selectedKeys}
+          selectedKeys={
+            this.props.page in this.pagesToKeysMap
+              ? this.pagesToKeysMap[this.props.page]
+              : this.pagesToKeysMap["other"]
+          }
           style={{ float: "right", marginRight: 24 }}
         >
           <Menu.Item key="1" onClick={this.goToFeed}>
@@ -77,7 +93,12 @@ class Navbar extends Component {
     return (
       <Header style={{ position: "fixed", zIndex: 1, width: "100%" }}>
         <div className="logo">
-          <Title  onClick={this.goToFeed} style={{ color: "#fff", cursor: "pointer" }}>Babble</Title>
+          <Title
+            onClick={this.goToFeed}
+            style={{ color: "#fff", cursor: "pointer" }}
+          >
+            Babble
+          </Title>
         </div>
         {this.conditionallyRenderMenu(this.props.token)}
       </Header>

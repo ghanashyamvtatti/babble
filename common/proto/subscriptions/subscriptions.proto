@@ -1,0 +1,27 @@
+syntax = "proto3";
+package proto;
+
+option go_package = "ds-project/common/proto/subscriptions";
+
+message SubscribeRequest {
+  string subscriber = 1;
+  string publisher = 2;
+}
+
+message SubscribeResponse {
+
+}
+
+message GetSubscriptionsRequest {
+  string username = 1;
+}
+
+message GetSubscriptionsResponse {
+  repeated string subscriptions = 1;
+}
+
+service SubscriptionService {
+  rpc Subscribe(SubscribeRequest) returns (SubscribeResponse);
+  rpc Unsubscribe(SubscribeRequest) returns (SubscribeResponse);
+  rpc GetSubscriptions(GetSubscriptionsRequest) returns (GetSubscriptionsResponse);
+}

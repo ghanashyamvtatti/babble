@@ -1,18 +1,20 @@
 package controllers
 
 import (
+	"ds-project/common/proto/subscriptions"
+	"ds-project/common/proto/users"
 	"ds-project/config"
 	"ds-project/dtos"
-	"ds-project/services"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-func Subscribe(appConfig *config.ApplicationConfig) gin.HandlerFunc {
+func Subscribe(clients *config.ServiceClients) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		username := context.Param("username")
 		publisher := context.Param("publisher")
-		if ! services.CheckUserNameExists(appConfig, publisher) {
+		response, err := clients.UserClient.CheckUserNameExists(context, &users.GetUserRequest{Username: username})
+		if err != nil || ! response.Ok {
 			context.JSON(500, dtos.Response{
 				Status:  false,
 				Message: "Invalid publisher",
@@ -20,7 +22,18 @@ func Subscribe(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 			})
 			return
 		}
-		services.Subscribe(appConfig, username, publisher)
+		_, subscriptionError := clients.SubscriptionClient.Subscribe(context, &subscriptions.SubscribeRequest{
+			Subscriber: username,
+			Publisher:  publisher,
+		})
+		if subscriptionError != nil {
+			context.JSON(500, dtos.Response{
+				Status:  false,
+				Message: subscriptionError.Error(),
+				Data:    nil,
+			})
+			return
+		}
 
 		context.JSON(200, dtos.Response{
 			Status:  true,
@@ -30,11 +43,12 @@ func Subscribe(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 	}
 }
 
-func Unsubscribe(appConfig *config.ApplicationConfig) gin.HandlerFunc {
+func Unsubscribe(clients *config.ServiceClients) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		username := context.Param("username")
 		publisher := context.Param("publisher")
-		if !services.CheckUserNameExists(appConfig, publisher) {
+		response, err := clients.UserClient.CheckUserNameExists(context, &users.GetUserRequest{Username: username})
+		if err != nil || ! response.Ok {
 			context.JSON(500, dtos.Response{
 				Status:  false,
 				Message: "Invalid publisher",
@@ -42,7 +56,18 @@ func Unsubscribe(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 			})
 			return
 		}
-		services.Unsubscribe(appConfig, username, publisher)
+		_, subscriptionError := clients.SubscriptionClient.Unsubscribe(context, &subscriptions.SubscribeRequest{
+			Subscriber: username,
+			Publisher:  publisher,
+		})
+		if subscriptionError != nil {
+			context.JSON(500, dtos.Response{
+				Status:  false,
+				Message: subscriptionError.Error(),
+				Data:    nil,
+			})
+			return
+		}
 		context.JSON(200, dtos.Response{
 			Status:  true,
 			Message: "Successfully unsubscribed",
@@ -51,15 +76,23 @@ func Unsubscribe(appConfig *config.ApplicationConfig) gin.HandlerFunc {
 	}
 }
 
-func GetSubscriptions(appConfig *config.ApplicationConfig) gin.HandlerFunc {
+func GetSubscriptions(clients *config.ServiceClients) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		username := context.Param("username")
-		subscriptions := services.GetSubscriptionsForUsername(appConfig, username)
+		response, err := clients.SubscriptionClient.GetSubscriptions(context, &subscriptions.GetSubscriptionsRequest{Username: username})
+		if err != nil {
+			context.JSON(500, dtos.Response{
+				Status:  false,
+				Message: err.Error(),
+				Data:    nil,
+			})
+			return
+		}
 		context.JSON(http.StatusOK, dtos.Response{
 			Status:  true,
 			Message: "Successfully fetched user subscriptions",
 			Data: gin.H{
-				"subscriptions": subscriptions,
+				"subscriptions": response.Subscriptions,
 			},
 		})
 	}

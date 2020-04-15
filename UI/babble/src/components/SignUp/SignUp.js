@@ -5,9 +5,9 @@ import { signUpProcess } from "../../actions/actions";
 import "./SignUp.css";
 
 class SignUp extends Component {
-    onFinish = values => {
-        this.props.signUpProcess(values.name, values.username, values.password);
-      };
+  onFinish = values => {
+    this.props.signUpProcess(values.name, values.username, values.password);
+  };
   render() {
     return (
       <div className="sign-up-container">

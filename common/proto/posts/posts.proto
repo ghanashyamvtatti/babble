@@ -1,0 +1,28 @@
+syntax = "proto3";
+package posts;
+import "models.proto";
+
+option go_package = "ds-project/common/proto/posts";
+
+message AddPostRequest {
+  string username = 1;
+  string post = 2;
+}
+
+message AddPostResponse {
+  bool ok = 1;
+}
+
+message GetPostsRequest {
+  string username = 1;
+}
+
+message GetPostsResponse {
+  repeated models.Post posts = 1;
+}
+
+service PostsService {
+  rpc AddPost(AddPostRequest) returns (AddPostResponse);
+  rpc GetPosts(GetPostsRequest) returns (GetPostsResponse);
+  rpc GetFeed(GetPostsRequest) returns (GetPostsResponse);
+}

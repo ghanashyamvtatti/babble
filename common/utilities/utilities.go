@@ -1,4 +1,5 @@
 package utilities
+
 import "golang.org/x/crypto/bcrypt"
 
 func CheckPasswordHash(password, hash string) bool {

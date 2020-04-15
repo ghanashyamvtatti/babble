@@ -1,8 +1,16 @@
 import { Avatar, Card, Comment, Tooltip } from "antd";
 import React, { Component } from "react";
-import moment from "moment";
+import { connect } from "react-redux";
+import { loadUserDetails } from "../../actions/actions.js";
 
 class Post extends Component {
+  goToUserPage = () => {
+    this.props.loadUserDetails(
+      this.props.token,
+      this.props.me,
+      this.props.Username
+    );
+  };
   render() {
     return (
       <Card
@@ -21,19 +29,17 @@ class Post extends Component {
           // eslint-disable-next-line jsx-a11y/anchor-is-valid
           author={<a>{this.props.Username}</a>}
           avatar={
-            <Avatar alt={this.props.Username}>
+            <Avatar alt={this.props.Username} onClick={this.goToUserPage}>
               {this.props.Username[0].toUpperCase()}
             </Avatar>
           }
           content={<p>{this.props.Post}</p>}
           datetime={
             <Tooltip
-              title={moment(this.props.CreatedAt).format(
-                "MMMM Do YY, h:mm:ss a"
-              )}
+              title={new Date(this.props.CreatedAt * 1000).toLocaleString()}
             >
               <span>
-                {moment(this.props.CreatedAt).format("MMMM Do YY, h:mm:ss a")}
+                {new Date(this.props.CreatedAt * 1000).toLocaleString()}
               </span>
             </Tooltip>
           }
@@ -42,5 +48,8 @@ class Post extends Component {
     );
   }
 }
-
-export default Post;
+const mapStateToProps = state => ({
+  token: state.token,
+  me: state.me.username
+});
+export default connect(mapStateToProps, { loadUserDetails })(Post);

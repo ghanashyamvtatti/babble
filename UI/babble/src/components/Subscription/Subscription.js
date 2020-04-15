@@ -2,16 +2,21 @@ import { DeleteTwoTone, PlusCircleOutlined } from "@ant-design/icons";
 import { Avatar, Button, List } from "antd";
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import { getAllUsers, loadSubscriptionDetails, subscribe, unsubscribe } from "../../actions/actions";
+import {
+  getAllUsers,
+  loadSubscriptionDetails,
+  subscribe,
+  unsubscribe
+} from "../../actions/actions";
 
 class Subscription extends Component {
   componentDidMount() {
     this.props.loadSubscriptionDetails(this.props.token, this.props.username);
     this.props.getAllUsers(this.props.token);
-  };
+  }
   subscribeUser = (subscriber, publisher) => {
     this.props.subscribe(this.props.token, subscriber, publisher);
-  }
+  };
   unsubscribeUser = (subscriber, publisher) => {
     this.props.unsubscribe(this.props.token, subscriber, publisher);
   };
