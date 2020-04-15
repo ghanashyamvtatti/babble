@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"ds-project/common/proto/users"
+	"ds-project/common/proto/posts"
 	"google.golang.org/grpc"
 	"testing"
-	// "sync"
+	"sync"
 	"log"
 )
 
@@ -17,9 +18,6 @@ func TestUserNameExists(t *testing.T) {
 		panic(err)
 	}
 	userClient := users.NewUserServiceClient(userConnection)
-
-	// appConfig := config.NewAppConfig()
-	// ctx := cont
 	resp, err := userClient.CheckUserNameExists(context.Background(), &users.GetUserRequest{Username: "varun"})
 
 	if err != nil {
@@ -30,9 +28,54 @@ func TestUserNameExists(t *testing.T) {
 	log.Println("HERE")
 	log.Println(resp.Ok)
 
-	// exists := services.CheckUserNameExists(appConfig, "varun")
-	// if !exists {
-	// 	
+}
+
+func TestMultiplePost(t *testing.T) {
+	log.Println("Testing add multiple post service")
+
+	postConnection, err := grpc.Dial("localhost:3003", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+
+	postClient := posts.NewPostsServiceClient(postConnection)
+
+	// appConfig := config.NewAppConfig()
+	// initialPosts := services.GetPostsForUser(appConfig, "varun")
+	// initialPostsLength := len(initialPosts)
+
+	wg := sync.WaitGroup{}
+	for idx := 0; idx < 10000; idx++ {
+		wg.Add(1)
+
+		go func(idx int) {
+			defer wg.Done()
+
+
+		response, err := postClient.AddPost(context.Background(), &posts.AddPostRequest{
+			Username: "varun",
+			Post:     "New POST :" + string(idx) ,
+		})
+
+		if err != nil {
+			log.Println(err)
+			t.Error("fails")
+		}
+		log.Println(response.Ok)
+
+
+		}(idx)
+	}
+
+	wg.Wait()
+	// finalPosts := services.GetPostsForUser(appConfig, "varun")
+	// finalPostsLength := len(finalPosts)
+
+	// log.Println(initialPostsLength)
+	// log.Println(finalPostsLength)
+
+	// if finalPostsLength != initialPostsLength + 1000 {
+	// 	t.Error("fails")
 	// }
 }
 
