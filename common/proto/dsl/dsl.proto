@@ -1,7 +1,7 @@
 /*
 Defines the protocol buffers for the Data Service Layer Server
 cd into the dsl directory and run this
-protoc -I ../models/ -I . dsl.proto --go_out=plugins=grpc:./
+protoc -I ./ds-project/common/proto/models -I ./ds-project/common/proto/dsl dsl.proto --go_out=plugins=grpc:./
  */
 
 syntax = "proto3";
