@@ -1,3 +1,4 @@
+start runetcd.bat
 start go run servers/dataserver/dataserver.go
 start go run servers/authserver/authserver.go
 start go run servers/postsserver/postsserver.go
