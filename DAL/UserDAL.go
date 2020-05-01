@@ -3,18 +3,23 @@ package DAL
 import (
 	"ds-project/common/proto/models"
 	"encoding/json"
-	"ds-project/sandbox"
+	"ds-project/raft"
 	"github.com/coreos/etcd/clientv3"
 	"context"
 	"fmt"
+	"sync"
 )
 
 type UsersDB struct {
 	Users         map[string]*models.User 
 }
 
+var(
+	mutex     sync.Mutex
+)
+
 func GetUser(ctx context.Context, kv clientv3.KV, username string) (*models.User, bool) {
-	bt := RAFT.GetKey(ctx,kv,"users")
+	bt := raft.GetKey(ctx,kv,"users")
 	var result UsersDB
     err:= json.Unmarshal(bt, &result)
     if err != nil {
@@ -26,7 +31,7 @@ func GetUser(ctx context.Context, kv clientv3.KV, username string) (*models.User
 }
 
 func GetUsers(ctx context.Context, kv clientv3.KV) map[string]*models.User {
-	bt := RAFT.GetKey(ctx,kv,"users")
+	bt := raft.GetKey(ctx,kv,"users")
 	var result UsersDB
     err:= json.Unmarshal(bt, &result)
     if err != nil {
@@ -36,7 +41,7 @@ func GetUsers(ctx context.Context, kv clientv3.KV) map[string]*models.User {
 }
 
 func CreateUser(ctx context.Context, kv clientv3.KV, username string, value *models.User) bool {
-	bt := RAFT.GetKey(ctx,kv,"users")
+	bt := raft.GetKey(ctx,kv,"users")
 	var result UsersDB
     err:= json.Unmarshal(bt, &result)
     if err != nil {
@@ -46,6 +51,6 @@ func CreateUser(ctx context.Context, kv clientv3.KV, username string, value *mod
     fmt.Println(result)
 	result.Users[username] = value
 	marshalledUser, err := json.Marshal(result)
-	RAFT.PutKey(ctx,kv,"users",marshalledUser)
+	raft.PutKey(ctx,kv,"users",marshalledUser)
 	return true
 }

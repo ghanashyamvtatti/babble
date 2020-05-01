@@ -1,4 +1,4 @@
-package RAFT
+package raft
 
 import (  
     // "fmt"
