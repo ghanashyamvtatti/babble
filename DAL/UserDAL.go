@@ -2,19 +2,50 @@ package DAL
 
 import (
 	"ds-project/common/proto/models"
-	"ds-project/config"
+	"encoding/json"
+	"ds-project/sandbox"
+	"github.com/coreos/etcd/clientv3"
+	"context"
+	"fmt"
 )
 
-func GetUser(appConfig *config.ApplicationConfig, username string) (*models.User, bool) {
-	user, ok := appConfig.Users[username]
+type UsersDB struct {
+	Users         map[string]*models.User 
+}
+
+func GetUser(ctx context.Context, kv clientv3.KV, username string) (*models.User, bool) {
+	bt := RAFT.GetKey(ctx,kv,"users")
+	var result UsersDB
+    err:= json.Unmarshal(bt, &result)
+    if err != nil {
+        panic(err)
+    }
+   
+	user, ok := result.Users[username]
 	return user, ok
 }
 
-func GetUsers(appConfig *config.ApplicationConfig) map[string]*models.User {
-	return appConfig.Users
+func GetUsers(ctx context.Context, kv clientv3.KV) map[string]*models.User {
+	bt := RAFT.GetKey(ctx,kv,"users")
+	var result UsersDB
+    err:= json.Unmarshal(bt, &result)
+    if err != nil {
+        panic(err)
+    }
+	return result.Users
 }
 
-func CreateUser(appConfig *config.ApplicationConfig, username string, value *models.User) bool {
-	appConfig.Users[username] = value
+func CreateUser(ctx context.Context, kv clientv3.KV, username string, value *models.User) bool {
+	bt := RAFT.GetKey(ctx,kv,"users")
+	var result UsersDB
+    err:= json.Unmarshal(bt, &result)
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println("result")
+    fmt.Println(result)
+	result.Users[username] = value
+	marshalledUser, err := json.Marshal(result)
+	RAFT.PutKey(ctx,kv,"users",marshalledUser)
 	return true
 }
