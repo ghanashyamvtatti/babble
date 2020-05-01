@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	// "ds-project/common/proto/dsl"
 	"ds-project/DAL"
 	"ds-project/common/proto/users"
 	"google.golang.org/grpc"
@@ -31,8 +30,22 @@ rpc GetUser(GetUserRequest) returns (GetUserResponse);
 */
 
 func (server *UserServer) CheckUserNameExists(ctx context.Context, req *users.GetUserRequest) (*users.UserExistsResponse, error) {
-	_, ok := DAL.GetUser(ctx,server.kv, req.Username)
-	return &users.UserExistsResponse{Ok: ok}, nil
+	result := make(chan *models.User)
+	errorChan := make(chan error)
+	go DAL.GetUser(ctx,server.kv, req.Username,result, errorChan)
+
+	select{
+	case <- us := result:
+		if us.Username == "" {
+			return &users.UserExistsResponse{Ok: true}, nil
+		}else{
+			return &users.UserExistsResponse{Ok: false}, nil
+		}
+	case <- err := errorChan:
+		return &users.UserExistsResponse{Ok: false}, err
+	case <- ctx.Done():
+		return &users.UserExistsResponse{Ok: false}, ctx.Err()
+	}
 }
 
 func (server *UserServer) GetUsers(ctx context.Context, req *users.GetUsersRequest) (*users.GetUsersResponse, error) {
@@ -53,33 +66,36 @@ func (server *UserServer) GetUsers(ctx context.Context, req *users.GetUsersReque
 }
 
 func (server *UserServer) CreateUser(ctx context.Context, req *users.CreateUserRequest) (*users.CreateUserResponse, error) {
-	DAL.CreateUser(ctx,server.kv, req.Username, req.User)
 
-	// _, err := server.dslClient.CreateUser(ctx, &dsl.CreateUserRequest{
-	// 	Username: req.Username,
-	// 	User:     req.User,
-	// })
-	return &users.CreateUserResponse{}, nil
+	result := make(chan bool)
+	errorChan := make(chan error)
+
+	go DAL.CreateUser(ctx,server.kv, req.Username, req.User,result, errorChan)
+
+	select{
+	case <- result:
+		return &users.CreateUserResponse{}, nil
+	case <- err := errorChan:
+		return &users.CreateUserResponse{}, err
+	case <- ctx.Done():
+		return &users.CreateUserResponse{}, ctx.Err()
+	}
 }
 
 func (server *UserServer) GetUser(ctx context.Context, req *users.GetUserRequest) (*users.GetUserResponse, error) {
-
-	result := make(chan map[string]*models.User)
-	errorChan := make(chan error)
-
-
-	response, _ := DAL.GetUser(ctx,server.kv, req.Username)
 	
+	result := make(chan *models.User)
+	errorChan := make(chan error)
+	go DAL.GetUser(ctx,server.kv, req.Username,result, errorChan)
 
-	// response, err := server.dslClient.GetUser(ctx, &dsl.GetUserRequest{Username: req.Username})
-	// if err != nil {
-	// 	return &users.GetUserResponse{}, err
-	// } else {
-		return &users.GetUserResponse{
-			Username: req.Username,
-			User:     response,
-		}, nil
-	// }
+	select{
+	case <- r := result:
+		return &users.GetUserResponse{Username: req.Username,User:r,}, nil
+	case <- err := errorChan:
+		return &users.GetUserResponse{Username: req.Username,User:nil,}, err
+	case <- ctx.Done():
+		return &users.GetUserResponse{Username: req.Username,User:response,}, ctx.Err()
+	}
 }
 
 func main() {

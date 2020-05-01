@@ -24,18 +24,19 @@ func GetUser(ctx context.Context, kv clientv3.KV, username string,result chan *m
 	defer mutex.Unlock()
 
 	bt := raft.GetKey(ctx,kv,"users")
-	var result UsersDB
-    err:= json.Unmarshal(bt, &result)
+	var r UsersDB
+    err:= json.Unmarshal(bt, &r)
     if err != nil {
         errorChan <- err
         return
     }
    
-	user, ok := result.Users[username]
-	return user, ok
+	result <- r.Users[username]
+	return
 }
 
 func GetUsers(ctx context.Context, kv clientv3.KV,result chan map[string]*models.User, errorChan chan error) map[string]*models.User {
+	
 	mutex.Lock()
 	defer mutex.Unlock()
 
