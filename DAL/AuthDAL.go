@@ -1,12 +1,10 @@
 package DAL
 
 import (
-	// "ds-project/common/proto/models"
 	"encoding/json"
 	"ds-project/raft"
 	"github.com/coreos/etcd/clientv3"
 	"context"
-	// "fmt"
 	"sync"
 )
 
@@ -27,7 +25,7 @@ func SetAccessToken(ctx context.Context, kv clientv3.KV, username string, token 
 	var result TokenDB
     err:= json.Unmarshal(bt, &result)
     if err != nil {
-        error <- err
+        errorChan <- err
         return
     }
 
@@ -47,7 +45,7 @@ func GetAccessToken(ctx context.Context, kv clientv3.KV, username string, result
 	var result TokenDB
     err:= json.Unmarshal(bt, &result)
     if err != nil {
-        error <- err
+        errorChan <- err
         return
     }
 
@@ -60,12 +58,12 @@ func DeleteAccessToken(ctx context.Context, kv clientv3.KV, username string,resu
 	
 	mutex.Lock()
 	defer mutex.Unlock()
-	
+
 	bt := raft.GetKey(ctx,kv,"tokens")
 	var result TokenDB
     err:= json.Unmarshal(bt, &result)
     if err != nil {
-        error <- err
+        errorChan <- err
         return
     }
 

@@ -18,39 +18,55 @@ var(
 	mutex     sync.Mutex
 )
 
-func GetUser(ctx context.Context, kv clientv3.KV, username string) (*models.User, bool) {
+func GetUser(ctx context.Context, kv clientv3.KV, username string,result chan *models.User, errorChan chan error) (*models.User, bool) {
+
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	bt := raft.GetKey(ctx,kv,"users")
 	var result UsersDB
     err:= json.Unmarshal(bt, &result)
     if err != nil {
-        panic(err)
+        errorChan <- err
+        return
     }
    
 	user, ok := result.Users[username]
 	return user, ok
 }
 
-func GetUsers(ctx context.Context, kv clientv3.KV) map[string]*models.User {
+func GetUsers(ctx context.Context, kv clientv3.KV,result chan map[string]*models.User, errorChan chan error) map[string]*models.User {
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	bt := raft.GetKey(ctx,kv,"users")
-	var result UsersDB
-    err:= json.Unmarshal(bt, &result)
+	var r UsersDB
+    err:= json.Unmarshal(bt, &r)
     if err != nil {
-        panic(err)
+        errorChan <- err
+        return
     }
-	return result.Users
+	result <- r.Users
+	return
 }
 
-func CreateUser(ctx context.Context, kv clientv3.KV, username string, value *models.User) bool {
+func CreateUser(ctx context.Context, kv clientv3.KV, username string, result chan bool, errorChan chan error) bool {
+	
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	bt := raft.GetKey(ctx,kv,"users")
 	var result UsersDB
     err:= json.Unmarshal(bt, &result)
     if err != nil {
-        panic(err)
+        errorChan <- err
+        return
     }
     fmt.Println("result")
     fmt.Println(result)
 	result.Users[username] = value
 	marshalledUser, err := json.Marshal(result)
 	raft.PutKey(ctx,kv,"users",marshalledUser)
-	return true
+	result <- true 
+	return
 }

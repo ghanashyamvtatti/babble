@@ -36,13 +36,20 @@ func (server *UserServer) CheckUserNameExists(ctx context.Context, req *users.Ge
 }
 
 func (server *UserServer) GetUsers(ctx context.Context, req *users.GetUsersRequest) (*users.GetUsersResponse, error) {
-	us := DAL.GetUsers(ctx,server.kv)
-	// response, err := server.dslClient.GetUsers(ctx, &dsl.GetUsersRequest{})
-	// if err != nil {
-	// 	return &users.GetUsersResponse{Users: nil}, err
-	// } else {
+
+	result := make(chan map[string]*models.User)
+	errorChan := make(chan error)
+
+	go DAL.GetUsers(ctx,server.kv,result, errorChan)
+
+	select{
+	case <- us := result:
 		return &users.GetUsersResponse{Users: us}, nil
-	// }
+	case <- err := errorChan:
+		return &users.GetUsersResponse{Users: nil}, err
+	case <- ctx.Done():
+		return &users.GetUsersResponse{Users: nil}, ctx.Err()
+	}
 }
 
 func (server *UserServer) CreateUser(ctx context.Context, req *users.CreateUserRequest) (*users.CreateUserResponse, error) {
@@ -56,7 +63,14 @@ func (server *UserServer) CreateUser(ctx context.Context, req *users.CreateUserR
 }
 
 func (server *UserServer) GetUser(ctx context.Context, req *users.GetUserRequest) (*users.GetUserResponse, error) {
+
+	result := make(chan map[string]*models.User)
+	errorChan := make(chan error)
+
+
 	response, _ := DAL.GetUser(ctx,server.kv, req.Username)
+	
+
 	// response, err := server.dslClient.GetUser(ctx, &dsl.GetUserRequest{Username: req.Username})
 	// if err != nil {
 	// 	return &users.GetUserResponse{}, err
@@ -73,23 +87,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-
-	// ctx, _ := context.WithTimeout(context.Background(), requestTimeout)
     cli, _ := clientv3.New(clientv3.Config{
         DialTimeout: dialTimeout,
         Endpoints: []string{"127.0.0.1:2379"},
     })
     defer cli.Close()
     keyVal := clientv3.NewKV(cli)
-
-	// // Set up a connection to the DSL server.
-	// conn, err := grpc.Dial("localhost:3001", grpc.WithInsecure(), grpc.WithBlock())
-
-	// if err != nil {
-	// 	log.Fatalf("did not connect: %v", err)
-	// }
-	// defer conn.Close()
-	// dslClient := dsl.NewDataServiceClient(conn)
 
 	server := grpc.NewServer()
 	users.RegisterUserServiceServer(server, &UserServer{kv: keyVal})
