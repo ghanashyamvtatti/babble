@@ -1,8 +1,8 @@
 package main
 
 import (
+	"ds-project/APIGateway/common"
 	"ds-project/APIGateway/controllers"
-	"ds-project/common"
 	"ds-project/common/proto/auth"
 	"ds-project/common/proto/posts"
 	"ds-project/common/proto/subscriptions"
