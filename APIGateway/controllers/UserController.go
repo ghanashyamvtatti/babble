@@ -1,8 +1,8 @@
 package controllers
 
 import (
+	"ds-project/APIGateway/common"
 	"ds-project/APIGateway/dtos"
-	"ds-project/common"
 	"ds-project/common/proto/models"
 	"ds-project/common/proto/users"
 	"github.com/gin-gonic/gin"
