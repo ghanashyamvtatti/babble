@@ -35,9 +35,13 @@ So the data server is currently emulating etcd/raft.
  
 ## Setup
 (ensure you have yarn or npm installed)
-1. `cd` into your GOPATH
-2. `git clone https://github.com/Distributed-Systems-CSGY9223/vo383-ppr239-gvt217-final-project ds-project`
-3. `cd ds-project/UI/babble`
+
+1. Go to https://github.com/etcd-io/etcd/releases
+    * (Linux and MacOS) Follow the instructions as mentioned in the website
+    * (Windows) Download the windows zip file, extract it locally and add the folder to PATH
+2. `cd` into your GOPATH
+3. `git clone https://github.com/Distributed-Systems-CSGY9223/vo383-ppr239-gvt217-final-project ds-project`
+4. `cd ds-project/UI/babble`
 5. `npm install` or `yarn install`
 6. `cd ../..`
 7. `go build ds-project`
