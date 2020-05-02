@@ -127,15 +127,15 @@ func SignUp(clients *config.ServiceClients) gin.HandlerFunc {
 			return
 		}
 
-		// tokenResponse, err := clients.AuthClient.GenerateAccessToken(ctx, &auth.GenerateTokenRequest{Username: registerUser.Username})
-		// if err != nil {
-		// 	ctx.JSON(http.StatusInternalServerError, dtos.Response{
-		// 		Status:  false,
-		// 		Message: "Something went wrong while trying to generate the access token",
-		// 		Data:    nil,
-		// 	})
-		// 	return
-		// }
+		tokenResponse, err := clients.AuthClient.GenerateAccessToken(ctx, &auth.GenerateTokenRequest{Username: registerUser.Username})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, dtos.Response{
+				Status:  false,
+				Message: "Something went wrong while trying to generate the access token",
+				Data:    nil,
+			})
+			return
+		}
 		ctx.JSON(http.StatusOK, dtos.Response{
 			Status:  true,
 			Message: "Successfully registered user",
@@ -144,7 +144,7 @@ func SignUp(clients *config.ServiceClients) gin.HandlerFunc {
 					Username: userResponse.Username,
 					FullName: userResponse.User.FullName,
 				},
-				// "token": tokenResponse.Token,
+				"token": tokenResponse.Token,
 			},
 		})
 	}

@@ -1,76 +1,72 @@
 package authdal
 
 import (
+	"ds-project/common/utilities"
+	"ds-project/config"
 	"encoding/json"
-	"ds-project/raft"
-	"github.com/coreos/etcd/clientv3"
-	"context"
 	"sync"
 )
 
-var(
-	mutex     sync.Mutex
+var (
+	mutex sync.Mutex
 )
 
 type TokenDB struct {
-	Tokens        map[string]string
+	Tokens map[string]string
 }
 
-func SetAccessToken(ctx context.Context, kv clientv3.KV, username string, token string,result chan bool, errorChan chan error) {
-
+func SetAccessToken(request config.DALRequest, username string, token string, result chan bool) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	bt := raft.GetKey(ctx,kv,"tokens")
+	bt := utilities.GetKey(request.Ctx, request.Client, "tokens")
 	var r TokenDB
-    err:= json.Unmarshal(bt, &r)
-    if err != nil {
-        errorChan <- err
-        return
-    }
+	err := json.Unmarshal(bt, &r)
+	if err != nil {
+		request.ErrorChan <- err
+		return
+	}
 
-    r.Tokens[username] = token
+	r.Tokens[username] = token
 	marshalledToken, err := json.Marshal(r)
-	raft.PutKey(ctx,kv,"tokens",marshalledToken)
+	utilities.PutKey(request.Ctx, request.Client, "tokens", marshalledToken)
 	result <- true
 	return
 }
 
-func GetAccessToken(ctx context.Context, kv clientv3.KV, username string, result chan string, errorChan chan error) {
-	
+func GetAccessToken(request config.DALRequest, username string, result chan string) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	bt := raft.GetKey(ctx,kv,"tokens")
+	bt := utilities.GetKey(request.Ctx, request.Client, "tokens")
 	var r TokenDB
-    err:= json.Unmarshal(bt, &r)
-    if err != nil {
-        errorChan <- err
-        return
-    }
+	err := json.Unmarshal(bt, &r)
+	if err != nil {
+		request.ErrorChan <- err
+		return
+	}
 
 	token, _ := r.Tokens[username]
 	result <- token
 	return
 }
 
-func DeleteAccessToken(ctx context.Context, kv clientv3.KV, username string,result chan bool, errorChan chan error) {
-	
+func DeleteAccessToken(request config.DALRequest, username string, result chan bool) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	bt := raft.GetKey(ctx,kv,"tokens")
+	bt := utilities.GetKey(request.Ctx, request.Client, "tokens")
 	var r TokenDB
-    err:= json.Unmarshal(bt, &r)
-    if err != nil {
-        errorChan <- err
-        return
-    }
+	err := json.Unmarshal(bt, &r)
+	if err != nil {
+		request.ErrorChan <- err
+		return
+	}
 
-   	delete(r.Tokens, username)
+	delete(r.Tokens, username)
 
 	marshalledToken, err := json.Marshal(r)
-	raft.PutKey(ctx,kv,"tokens",marshalledToken)
+	utilities.PutKey(request.Ctx, request.Client, "tokens", marshalledToken)
 	result <- true
 	return
 }

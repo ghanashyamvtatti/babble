@@ -2,28 +2,28 @@ package main
 
 import (
 	"context"
-	"ds-project/common/proto/auth"
-	"ds-project/common/utilities"
 	"ds-project/DAL/authdal"
-	"ds-project/DAL/userdal"
-	"ds-project/common/proto/models"
+	"ds-project/common/proto/auth"
+	"ds-project/common/proto/users"
+	"ds-project/common/utilities"
+	"ds-project/config"
+	"github.com/coreos/etcd/clientv3"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
-	"github.com/coreos/etcd/clientv3"
-    "time"
+	"time"
 )
 
-var (  
-    dialTimeout    = 2 * time.Second
-    requestTimeout = 10 * time.Second
+var (
+	dialTimeout = 2 * time.Second
 )
 
 type AuthServer struct {
 	auth.UnimplementedAuthServiceServer
-	kv clientv3.KV
+	client     *clientv3.Client
+	userClient users.UserServiceClient
 }
 
 /*
@@ -43,14 +43,20 @@ func (s *AuthServer) GenerateAccessToken(ctx context.Context, req *auth.Generate
 	result := make(chan bool)
 	errorChan := make(chan error)
 
-	go authdal.SetAccessToken(ctx,s.kv, req.Username, token.String(), result, errorChan)
+	request := config.DALRequest{
+		Ctx:       ctx,
+		Client:    s.client,
+		ErrorChan: errorChan,
+	}
 
-	select{
-	case <- result:
+	go authdal.SetAccessToken(request, req.Username, token.String(), result)
+
+	select {
+	case <-result:
 		return &auth.GenerateTokenResponse{Token: token.String()}, nil
-	case err := <-errorChan:
+	case err := <-request.ErrorChan:
 		return &auth.GenerateTokenResponse{Token: token.String()}, err
-	case <- ctx.Done():
+	case <-ctx.Done():
 		return &auth.GenerateTokenResponse{Token: token.String()}, ctx.Err()
 	}
 }
@@ -60,41 +66,40 @@ func (s *AuthServer) CheckAccessTokenValid(ctx context.Context, req *auth.TokenV
 	result := make(chan string)
 	errorChan := make(chan error)
 
-	go authdal.GetAccessToken(ctx,s.kv, req.Username, result, errorChan)
+	request := config.DALRequest{
+		Ctx:       ctx,
+		Client:    s.client,
+		ErrorChan: errorChan,
+	}
 
-	select{
+	go authdal.GetAccessToken(request, req.Username, result)
+
+	select {
 	case token := <-result:
 		if token == req.Token {
 			return &auth.TokenValidityResponse{Ok: true}, nil
 		} else {
 			return &auth.TokenValidityResponse{Ok: false}, nil
 		}
-	case err := <-errorChan:
-
+	case err := <-request.ErrorChan:
 		return &auth.TokenValidityResponse{Ok: false}, err
-
-	case <- ctx.Done():
+	case <-ctx.Done():
 		return &auth.TokenValidityResponse{Ok: false}, ctx.Err()
 	}
-	
+
 }
 
 func (s *AuthServer) Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
-	result := make(chan *models.User)
-	errorChan := make(chan error)
-	go userdal.GetUser(ctx,s.kv, req.Username,result, errorChan)
+	response, err := s.userClient.GetUser(ctx, &users.GetUserRequest{Username: req.Username})
 
-	select{
-	case r := <-result:
-		if utilities.CheckPasswordHash(req.Password, r.Password) {
+	if err != nil {
+		return &auth.LoginResponse{Ok: false}, err
+	} else {
+		if utilities.CheckPasswordHash(req.Password, response.User.Password) {
 			return &auth.LoginResponse{Ok: true}, nil
 		} else {
 			return &auth.LoginResponse{Ok: false}, nil
 		}
-	case err := <-errorChan:
-		return &auth.LoginResponse{Ok: false}, err
-	case <- ctx.Done():
-		return &auth.LoginResponse{Ok: false}, ctx.Err()
 	}
 }
 
@@ -103,14 +108,19 @@ func (s *AuthServer) Logout(ctx context.Context, req *auth.LogoutRequest) (*auth
 	result := make(chan bool)
 	errorChan := make(chan error)
 
-	go authdal.DeleteAccessToken(ctx,s.kv, req.Username,result,errorChan)
+	request := config.DALRequest{
+		Ctx:       ctx,
+		Client:    s.client,
+		ErrorChan: errorChan,
+	}
+	go authdal.DeleteAccessToken(request, req.Username, result)
 
-	select{
-	case <- result:
-		 return &auth.LogoutResponse{}, nil
+	select {
+	case <-result:
+		return &auth.LogoutResponse{}, nil
 	case err := <-errorChan:
 		return &auth.LogoutResponse{}, err
-	case <- ctx.Done():
+	case <-ctx.Done():
 		return &auth.LogoutResponse{}, ctx.Err()
 	}
 }
@@ -122,14 +132,18 @@ func main() {
 	}
 
 	cli, _ := clientv3.New(clientv3.Config{
-        DialTimeout: dialTimeout,
-        Endpoints: []string{"127.0.0.1:2379"},
-    })
-    defer cli.Close()
-    keyVal := clientv3.NewKV(cli)
+		DialTimeout: dialTimeout,
+		Endpoints:   []string{"127.0.0.1:2379"},
+	})
+	defer cli.Close()
+
+	userConnection, err := grpc.Dial("localhost:3002", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
 
 	server := grpc.NewServer()
-	auth.RegisterAuthServiceServer(server, &AuthServer{kv: keyVal})
+	auth.RegisterAuthServiceServer(server, &AuthServer{client: cli, userClient: users.NewUserServiceClient(userConnection)})
 	reflection.Register(server)
 	log.Println("Auth service running on :3004")
 	if err := server.Serve(listener); err != nil {
