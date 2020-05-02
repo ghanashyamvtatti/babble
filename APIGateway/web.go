@@ -1,12 +1,12 @@
 package main
 
 import (
+	"ds-project/APIGateway/controllers"
+	"ds-project/common"
 	"ds-project/common/proto/auth"
 	"ds-project/common/proto/posts"
 	"ds-project/common/proto/subscriptions"
 	"ds-project/common/proto/users"
-	"ds-project/config"
-	"ds-project/controllers"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
 )
@@ -40,7 +40,7 @@ func SetupRouter() *gin.Engine {
 	}
 
 	// Get clients for connections
-	clients := config.ServiceClients{
+	clients := common.ServiceClients{
 		UserClient:         users.NewUserServiceClient(userConnection),
 		PostClient:         posts.NewPostsServiceClient(postConnection),
 		AuthClient:         auth.NewAuthServiceClient(authConnection),

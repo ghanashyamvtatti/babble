@@ -1,17 +1,17 @@
 package controllers
 
 import (
+	"ds-project/APIGateway/dtos"
+	"ds-project/common"
 	"ds-project/common/proto/auth"
 	"ds-project/common/proto/models"
 	"ds-project/common/proto/users"
 	"ds-project/common/utilities"
-	"ds-project/config"
-	"ds-project/dtos"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-func SignIn(clients *config.ServiceClients) gin.HandlerFunc {
+func SignIn(clients *common.ServiceClients) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var login dtos.UserLogin
 
@@ -69,7 +69,7 @@ func SignIn(clients *config.ServiceClients) gin.HandlerFunc {
 	}
 }
 
-func SignUp(clients *config.ServiceClients) gin.HandlerFunc {
+func SignUp(clients *common.ServiceClients) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
 		var registerUser dtos.UserRegistration
@@ -126,6 +126,7 @@ func SignUp(clients *config.ServiceClients) gin.HandlerFunc {
 			})
 			return
 		}
+
 		tokenResponse, err := clients.AuthClient.GenerateAccessToken(ctx, &auth.GenerateTokenRequest{Username: registerUser.Username})
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, dtos.Response{
@@ -149,7 +150,7 @@ func SignUp(clients *config.ServiceClients) gin.HandlerFunc {
 	}
 }
 
-func SignOut(clients *config.ServiceClients) gin.HandlerFunc {
+func SignOut(clients *common.ServiceClients) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		_, err := clients.AuthClient.Logout(context, &auth.LogoutRequest{Username: context.Param("username")})
 		if err != nil {
@@ -168,7 +169,7 @@ func SignOut(clients *config.ServiceClients) gin.HandlerFunc {
 	}
 }
 
-func Authenticate(clients *config.ServiceClients) gin.HandlerFunc {
+func Authenticate(clients *common.ServiceClients) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		username := context.Param("username")
 		resp, err := clients.UserClient.CheckUserNameExists(context, &users.GetUserRequest{Username: username})

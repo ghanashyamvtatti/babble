@@ -1,4 +1,4 @@
-package config
+package common
 
 import (
 	"ds-project/common/proto/auth"

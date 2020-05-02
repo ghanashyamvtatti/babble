@@ -1,13 +1,13 @@
 package controllers
 
 import (
+	"ds-project/APIGateway/dtos"
+	"ds-project/common"
 	"ds-project/common/proto/posts"
-	"ds-project/config"
-	"ds-project/dtos"
 	"github.com/gin-gonic/gin"
 )
 
-func GetUserFeed(clients *config.ServiceClients) gin.HandlerFunc {
+func GetUserFeed(clients *common.ServiceClients) gin.HandlerFunc {
 	return func(context *gin.Context) {
 
 		response, err := clients.PostClient.GetFeed(context, &posts.GetPostsRequest{
@@ -33,7 +33,7 @@ func GetUserFeed(clients *config.ServiceClients) gin.HandlerFunc {
 	}
 }
 
-func GetUserPosts(clients *config.ServiceClients) gin.HandlerFunc {
+func GetUserPosts(clients *common.ServiceClients) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		username := context.Param("username")
 		username = context.DefaultQuery("username", username)
@@ -60,7 +60,7 @@ func GetUserPosts(clients *config.ServiceClients) gin.HandlerFunc {
 	}
 }
 
-func CreatePost(clients *config.ServiceClients) gin.HandlerFunc {
+func CreatePost(clients *common.ServiceClients) gin.HandlerFunc {
 	return func(context *gin.Context) {
 
 		var post dtos.Post

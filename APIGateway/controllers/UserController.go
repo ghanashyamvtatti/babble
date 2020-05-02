@@ -1,10 +1,10 @@
 package controllers
 
 import (
+	"ds-project/APIGateway/dtos"
+	"ds-project/common"
 	"ds-project/common/proto/models"
 	"ds-project/common/proto/users"
-	"ds-project/config"
-	"ds-project/dtos"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -21,7 +21,7 @@ func mapUsersToDTO(users map[string]*models.User) []*dtos.User {
 	return data
 }
 
-func GetUsers(clients *config.ServiceClients) gin.HandlerFunc {
+func GetUsers(clients *common.ServiceClients) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		response, err := clients.UserClient.GetUsers(ctx, &users.GetUsersRequest{})
 		if err != nil {
@@ -40,7 +40,7 @@ func GetUsers(clients *config.ServiceClients) gin.HandlerFunc {
 	}
 }
 
-func GetUserDetails(clients *config.ServiceClients) gin.HandlerFunc {
+func GetUserDetails(clients *common.ServiceClients) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		username := context.Param("username")
 		username = context.DefaultQuery("username", username)

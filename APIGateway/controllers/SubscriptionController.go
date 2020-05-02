@@ -1,15 +1,15 @@
 package controllers
 
 import (
+	"ds-project/APIGateway/dtos"
+	"ds-project/common"
 	"ds-project/common/proto/subscriptions"
 	"ds-project/common/proto/users"
-	"ds-project/config"
-	"ds-project/dtos"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-func Subscribe(clients *config.ServiceClients) gin.HandlerFunc {
+func Subscribe(clients *common.ServiceClients) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		username := context.Param("username")
 		publisher := context.Param("publisher")
@@ -43,7 +43,7 @@ func Subscribe(clients *config.ServiceClients) gin.HandlerFunc {
 	}
 }
 
-func Unsubscribe(clients *config.ServiceClients) gin.HandlerFunc {
+func Unsubscribe(clients *common.ServiceClients) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		username := context.Param("username")
 		publisher := context.Param("publisher")
@@ -76,7 +76,7 @@ func Unsubscribe(clients *config.ServiceClients) gin.HandlerFunc {
 	}
 }
 
-func GetSubscriptions(clients *config.ServiceClients) gin.HandlerFunc {
+func GetSubscriptions(clients *common.ServiceClients) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		username := context.Param("username")
 		response, err := clients.SubscriptionClient.GetSubscriptions(context, &subscriptions.GetSubscriptionsRequest{Username: username})
