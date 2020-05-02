@@ -66,7 +66,7 @@ func (s *SubscriptionServer) GetSubscriptions(ctx context.Context, req *subscrip
 
 	select {
 	case res := <-result:
-		return &subscriptions.GetSubscriptionsResponse{Subscriptions: res}, nil
+		return res, nil
 	case err := <-errorChan:
 		return &subscriptions.GetSubscriptionsResponse{}, err
 	case <-ctx.Done():
