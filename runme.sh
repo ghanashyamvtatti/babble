@@ -33,9 +33,9 @@ nohup etcd --name s3 \
   --initial-cluster-state new &
 
 nohup go run servers/dataserver/dataserver.go &
-nohup go run servers/authserver/authserver.go &
-nohup go run servers/postsserver/postsserver.go &
-nohup go run servers/userserver/userserver.go &
-nohup go run servers/subscriptionsserver/subscriptionsserver.go &
+nohup go run AuthService/authserver.go &
+nohup go run PostService/postsserver.go &
+nohup go run UserService/userserver.go &
+nohup go run SubscriptionService/subscriptionsserver.go &
 nohup npm start --prefix UI/babble &
 go run web.go
