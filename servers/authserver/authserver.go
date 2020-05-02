@@ -4,7 +4,9 @@ import (
 	"context"
 	"ds-project/common/proto/auth"
 	"ds-project/common/utilities"
-	"ds-project/DAL"
+	"ds-project/DAL/authdal"
+	"ds-project/DAL/userdal"
+	"ds-project/common/proto/models"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -38,18 +40,18 @@ func (s *AuthServer) GenerateAccessToken(ctx context.Context, req *auth.Generate
 		panic(err)
 	}
 
-	result := make(chan string)
+	result := make(chan bool)
 	errorChan := make(chan error)
 
-	go DAL.SetAccessToken(ctx,s.kv, req.Username, token.String(), result, errorChan)
+	go authdal.SetAccessToken(ctx,s.kv, req.Username, token.String(), result, errorChan)
 
 	select{
 	case <- result:
 		return &auth.GenerateTokenResponse{Token: token.String()}, nil
-	case <- err := errorChan:
+	case err := <-errorChan:
 		return &auth.GenerateTokenResponse{Token: token.String()}, err
 	case <- ctx.Done():
-		return &auth.GenerateTokenResponse{Token: token.String()}, ctx.Err(
+		return &auth.GenerateTokenResponse{Token: token.String()}, ctx.Err()
 	}
 }
 
@@ -58,16 +60,16 @@ func (s *AuthServer) CheckAccessTokenValid(ctx context.Context, req *auth.TokenV
 	result := make(chan string)
 	errorChan := make(chan error)
 
-	go DAL.GetAccessToken(ctx,s.kv, req.Username, result, errorChan)
+	go authdal.GetAccessToken(ctx,s.kv, req.Username, result, errorChan)
 
 	select{
-	case <-token := result:
+	case token := <-result:
 		if token == req.Token {
 			return &auth.TokenValidityResponse{Ok: true}, nil
 		} else {
 			return &auth.TokenValidityResponse{Ok: false}, nil
 		}
-	case <- err := errorChan:
+	case err := <-errorChan:
 
 		return &auth.TokenValidityResponse{Ok: false}, err
 
@@ -78,26 +80,35 @@ func (s *AuthServer) CheckAccessTokenValid(ctx context.Context, req *auth.TokenV
 }
 
 func (s *AuthServer) Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
-	response, _ := DAL.GetUser(ctx,s.kv, req.Username)
-	if utilities.CheckPasswordHash(req.Password, response.Password) {
-		return &auth.LoginResponse{Ok: true}, nil
-	} else {
-		return &auth.LoginResponse{Ok: false}, nil
-	}
+	result := make(chan *models.User)
+	errorChan := make(chan error)
+	go userdal.GetUser(ctx,s.kv, req.Username,result, errorChan)
 
+	select{
+	case r := <-result:
+		if utilities.CheckPasswordHash(req.Password, r.Password) {
+			return &auth.LoginResponse{Ok: true}, nil
+		} else {
+			return &auth.LoginResponse{Ok: false}, nil
+		}
+	case err := <-errorChan:
+		return &auth.LoginResponse{Ok: false}, err
+	case <- ctx.Done():
+		return &auth.LoginResponse{Ok: false}, ctx.Err()
+	}
 }
 
 func (s *AuthServer) Logout(ctx context.Context, req *auth.LogoutRequest) (*auth.LogoutResponse, error) {
 
-	result := make(chan string)
+	result := make(chan bool)
 	errorChan := make(chan error)
 
-	go DAL.DeleteAccessToken(ctx,s.kv, req.Username,result,errorChan)
+	go authdal.DeleteAccessToken(ctx,s.kv, req.Username,result,errorChan)
 
 	select{
 	case <- result:
 		 return &auth.LogoutResponse{}, nil
-	case <- err := errorChan:
+	case err := <-errorChan:
 		return &auth.LogoutResponse{}, err
 	case <- ctx.Done():
 		return &auth.LogoutResponse{}, ctx.Err()
