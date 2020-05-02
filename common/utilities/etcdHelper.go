@@ -7,7 +7,10 @@ import (
 
 func GetKey(ctx context.Context, client *clientv3.Client, key string) []byte {
 	response, _ := client.Get(ctx, key)
-	bytes := []byte(string(response.Kvs[0].Value))
+	var bytes []byte
+	if response.Kvs != nil {
+		bytes = []byte(string(response.Kvs[0].Value))
+	}
 	return bytes
 }
 
