@@ -1,4 +1,4 @@
-package DAL
+package authdal
 
 import (
 	"encoding/json"
@@ -22,15 +22,15 @@ func SetAccessToken(ctx context.Context, kv clientv3.KV, username string, token 
 	defer mutex.Unlock()
 
 	bt := raft.GetKey(ctx,kv,"tokens")
-	var result TokenDB
-    err:= json.Unmarshal(bt, &result)
+	var r TokenDB
+    err:= json.Unmarshal(bt, &r)
     if err != nil {
         errorChan <- err
         return
     }
 
-    result.Tokens[username] = token
-	marshalledToken, err := json.Marshal(result)
+    r.Tokens[username] = token
+	marshalledToken, err := json.Marshal(r)
 	raft.PutKey(ctx,kv,"tokens",marshalledToken)
 	result <- true
 	return
@@ -42,14 +42,14 @@ func GetAccessToken(ctx context.Context, kv clientv3.KV, username string, result
 	defer mutex.Unlock()
 
 	bt := raft.GetKey(ctx,kv,"tokens")
-	var result TokenDB
-    err:= json.Unmarshal(bt, &result)
+	var r TokenDB
+    err:= json.Unmarshal(bt, &r)
     if err != nil {
         errorChan <- err
         return
     }
 
-	token, _ := result.Tokens[username]
+	token, _ := r.Tokens[username]
 	result <- token
 	return
 }
@@ -60,16 +60,16 @@ func DeleteAccessToken(ctx context.Context, kv clientv3.KV, username string,resu
 	defer mutex.Unlock()
 
 	bt := raft.GetKey(ctx,kv,"tokens")
-	var result TokenDB
-    err:= json.Unmarshal(bt, &result)
+	var r TokenDB
+    err:= json.Unmarshal(bt, &r)
     if err != nil {
         errorChan <- err
         return
     }
 
-   	delete(result.Tokens, username)
+   	delete(r.Tokens, username)
 
-	marshalledToken, err := json.Marshal(result)
+	marshalledToken, err := json.Marshal(r)
 	raft.PutKey(ctx,kv,"tokens",marshalledToken)
 	result <- true
 	return

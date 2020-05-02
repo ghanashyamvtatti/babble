@@ -2,7 +2,8 @@ package main
 
 import (
 	"context"
-	"ds-project/DAL"
+	"ds-project/DAL/userdal"
+	"ds-project/common/proto/models"
 	"ds-project/common/proto/users"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -30,35 +31,35 @@ rpc GetUser(GetUserRequest) returns (GetUserResponse);
 */
 
 func (server *UserServer) CheckUserNameExists(ctx context.Context, req *users.GetUserRequest) (*users.UserExistsResponse, error) {
-	result := make(chan *models.User)
+	res := make(chan *models.User)
 	errorChan := make(chan error)
-	go DAL.GetUser(ctx,server.kv, req.Username,result, errorChan)
+	go userdal.GetUser(ctx,server.kv, req.Username,res, errorChan)
 
 	select{
-	case <- us := result:
-		if us.Username == "" {
+	case us := <-res:
+		if us.FullName == "" {
 			return &users.UserExistsResponse{Ok: true}, nil
 		}else{
 			return &users.UserExistsResponse{Ok: false}, nil
 		}
-	case <- err := errorChan:
+	case err := <-errorChan:
 		return &users.UserExistsResponse{Ok: false}, err
-	case <- ctx.Done():
+	case <-ctx.Done():
 		return &users.UserExistsResponse{Ok: false}, ctx.Err()
 	}
 }
 
 func (server *UserServer) GetUsers(ctx context.Context, req *users.GetUsersRequest) (*users.GetUsersResponse, error) {
 
-	result := make(chan map[string]*models.User)
+	res := make(chan map[string]*models.User)
 	errorChan := make(chan error)
 
-	go DAL.GetUsers(ctx,server.kv,result, errorChan)
+	go userdal.GetUsers(ctx,server.kv,res, errorChan)
 
 	select{
-	case <- us := result:
+	case us := <-res:
 		return &users.GetUsersResponse{Users: us}, nil
-	case <- err := errorChan:
+	case err := <-errorChan:
 		return &users.GetUsersResponse{Users: nil}, err
 	case <- ctx.Done():
 		return &users.GetUsersResponse{Users: nil}, ctx.Err()
@@ -67,15 +68,15 @@ func (server *UserServer) GetUsers(ctx context.Context, req *users.GetUsersReque
 
 func (server *UserServer) CreateUser(ctx context.Context, req *users.CreateUserRequest) (*users.CreateUserResponse, error) {
 
-	result := make(chan bool)
+	res := make(chan bool)
 	errorChan := make(chan error)
 
-	go DAL.CreateUser(ctx,server.kv, req.Username, req.User,result, errorChan)
+	go userdal.CreateUser(ctx,server.kv, req.Username, req.User,res, errorChan)
 
 	select{
-	case <- result:
+	case <-res:
 		return &users.CreateUserResponse{}, nil
-	case <- err := errorChan:
+	case err := <-errorChan:
 		return &users.CreateUserResponse{}, err
 	case <- ctx.Done():
 		return &users.CreateUserResponse{}, ctx.Err()
@@ -84,17 +85,17 @@ func (server *UserServer) CreateUser(ctx context.Context, req *users.CreateUserR
 
 func (server *UserServer) GetUser(ctx context.Context, req *users.GetUserRequest) (*users.GetUserResponse, error) {
 	
-	result := make(chan *models.User)
+	res := make(chan *models.User)
 	errorChan := make(chan error)
-	go DAL.GetUser(ctx,server.kv, req.Username,result, errorChan)
+	go userdal.GetUser(ctx,server.kv, req.Username,res, errorChan)
 
 	select{
-	case <- r := result:
+	case r := <-res:
 		return &users.GetUserResponse{Username: req.Username,User:r,}, nil
-	case <- err := errorChan:
+	case err := <-errorChan:
 		return &users.GetUserResponse{Username: req.Username,User:nil,}, err
 	case <- ctx.Done():
-		return &users.GetUserResponse{Username: req.Username,User:response,}, ctx.Err()
+		return &users.GetUserResponse{Username: req.Username,User:nil,}, ctx.Err()
 	}
 }
 

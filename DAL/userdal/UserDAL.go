@@ -1,4 +1,4 @@
-package DAL
+package userdal
 
 import (
 	"ds-project/common/proto/models"
@@ -18,7 +18,7 @@ var(
 	mutex     sync.Mutex
 )
 
-func GetUser(ctx context.Context, kv clientv3.KV, username string,result chan *models.User, errorChan chan error) (*models.User, bool) {
+func GetUser(ctx context.Context, kv clientv3.KV, username string,res chan *models.User, errorChan chan error)  {
 
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -31,11 +31,11 @@ func GetUser(ctx context.Context, kv clientv3.KV, username string,result chan *m
         return
     }
    
-	result <- r.Users[username]
+	res <- r.Users[username]
 	return
 }
 
-func GetUsers(ctx context.Context, kv clientv3.KV,result chan map[string]*models.User, errorChan chan error) map[string]*models.User {
+func GetUsers(ctx context.Context, kv clientv3.KV,res chan map[string]*models.User, errorChan chan error)  {
 	
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -47,27 +47,27 @@ func GetUsers(ctx context.Context, kv clientv3.KV,result chan map[string]*models
         errorChan <- err
         return
     }
-	result <- r.Users
+	res <- r.Users
 	return
 }
 
-func CreateUser(ctx context.Context, kv clientv3.KV, username string, result chan bool, errorChan chan error) bool {
+func CreateUser(ctx context.Context, kv clientv3.KV, username string,value *models.User, res chan bool, errorChan chan error)  {
 	
 	mutex.Lock()
 	defer mutex.Unlock()
 
 	bt := raft.GetKey(ctx,kv,"users")
-	var result UsersDB
-    err:= json.Unmarshal(bt, &result)
+	var r UsersDB
+    err:= json.Unmarshal(bt, &r)
     if err != nil {
         errorChan <- err
         return
     }
-    fmt.Println("result")
-    fmt.Println(result)
-	result.Users[username] = value
-	marshalledUser, err := json.Marshal(result)
+    fmt.Println("res")
+    fmt.Println(r)
+	r.Users[username] = value
+	marshalledUser, err := json.Marshal(r)
 	raft.PutKey(ctx,kv,"users",marshalledUser)
-	result <- true 
+	res <- true 
 	return
 }
