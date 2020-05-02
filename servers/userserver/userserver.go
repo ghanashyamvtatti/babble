@@ -2,17 +2,25 @@ package main
 
 import (
 	"context"
-	"ds-project/common/proto/dsl"
+	"ds-project/DAL/userdal"
+	"ds-project/common/proto/models"
 	"ds-project/common/proto/users"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
+	"github.com/coreos/etcd/clientv3"
+    "time"
+)
+
+var (  
+    dialTimeout    = 2 * time.Second
+    requestTimeout = 10 * time.Second
 )
 
 type UserServer struct {
 	users.UnimplementedUserServiceServer
-	dslClient dsl.DataServiceClient
+	kv clientv3.KV
 }
 
 /*
@@ -23,40 +31,71 @@ rpc GetUser(GetUserRequest) returns (GetUserResponse);
 */
 
 func (server *UserServer) CheckUserNameExists(ctx context.Context, req *users.GetUserRequest) (*users.UserExistsResponse, error) {
-	response, err := server.dslClient.GetUser(ctx, &dsl.GetUserRequest{Username: req.Username})
-	if err != nil {
+	res := make(chan *models.User)
+	errorChan := make(chan error)
+	go userdal.GetUser(ctx,server.kv, req.Username,res, errorChan)
+
+	select{
+	case us := <-res:
+		if us.FullName == "" {
+			return &users.UserExistsResponse{Ok: true}, nil
+		}else{
+			return &users.UserExistsResponse{Ok: false}, nil
+		}
+	case err := <-errorChan:
 		return &users.UserExistsResponse{Ok: false}, err
-	} else {
-		return &users.UserExistsResponse{Ok: response.Ok}, err
+	case <-ctx.Done():
+		return &users.UserExistsResponse{Ok: false}, ctx.Err()
 	}
 }
 
 func (server *UserServer) GetUsers(ctx context.Context, req *users.GetUsersRequest) (*users.GetUsersResponse, error) {
-	response, err := server.dslClient.GetUsers(ctx, &dsl.GetUsersRequest{})
-	if err != nil {
+
+	res := make(chan map[string]*models.User)
+	errorChan := make(chan error)
+
+	go userdal.GetUsers(ctx,server.kv,res, errorChan)
+
+	select{
+	case us := <-res:
+		return &users.GetUsersResponse{Users: us}, nil
+	case err := <-errorChan:
 		return &users.GetUsersResponse{Users: nil}, err
-	} else {
-		return &users.GetUsersResponse{Users: response.Users}, err
+	case <- ctx.Done():
+		return &users.GetUsersResponse{Users: nil}, ctx.Err()
 	}
 }
 
 func (server *UserServer) CreateUser(ctx context.Context, req *users.CreateUserRequest) (*users.CreateUserResponse, error) {
-	_, err := server.dslClient.CreateUser(ctx, &dsl.CreateUserRequest{
-		Username: req.Username,
-		User:     req.User,
-	})
-	return &users.CreateUserResponse{}, err
+
+	res := make(chan bool)
+	errorChan := make(chan error)
+
+	go userdal.CreateUser(ctx,server.kv, req.Username, req.User,res, errorChan)
+
+	select{
+	case <-res:
+		return &users.CreateUserResponse{}, nil
+	case err := <-errorChan:
+		return &users.CreateUserResponse{}, err
+	case <- ctx.Done():
+		return &users.CreateUserResponse{}, ctx.Err()
+	}
 }
 
 func (server *UserServer) GetUser(ctx context.Context, req *users.GetUserRequest) (*users.GetUserResponse, error) {
-	response, err := server.dslClient.GetUser(ctx, &dsl.GetUserRequest{Username: req.Username})
-	if err != nil {
-		return &users.GetUserResponse{}, err
-	} else {
-		return &users.GetUserResponse{
-			Username: req.Username,
-			User:     response.User,
-		}, err
+	
+	res := make(chan *models.User)
+	errorChan := make(chan error)
+	go userdal.GetUser(ctx,server.kv, req.Username,res, errorChan)
+
+	select{
+	case r := <-res:
+		return &users.GetUserResponse{Username: req.Username,User:r,}, nil
+	case err := <-errorChan:
+		return &users.GetUserResponse{Username: req.Username,User:nil,}, err
+	case <- ctx.Done():
+		return &users.GetUserResponse{Username: req.Username,User:nil,}, ctx.Err()
 	}
 }
 
@@ -65,18 +104,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-
-	// Set up a connection to the DSL server.
-	conn, err := grpc.Dial("localhost:3001", grpc.WithInsecure(), grpc.WithBlock())
-
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
-	defer conn.Close()
-	dslClient := dsl.NewDataServiceClient(conn)
+    cli, _ := clientv3.New(clientv3.Config{
+        DialTimeout: dialTimeout,
+        Endpoints: []string{"127.0.0.1:2379"},
+    })
+    defer cli.Close()
+    keyVal := clientv3.NewKV(cli)
 
 	server := grpc.NewServer()
-	users.RegisterUserServiceServer(server, &UserServer{dslClient: dslClient})
+	users.RegisterUserServiceServer(server, &UserServer{kv: keyVal})
 	reflection.Register(server)
 	log.Println("User service running on :3002")
 	if err := server.Serve(listener); err != nil {
