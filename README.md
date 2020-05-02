@@ -5,14 +5,28 @@
 ```
 .
 ├── common                  # Contains utilities and protobufs common to the entire project
-├── config                  # Application session level data structures and their initial values
-├── servers                 # Contains gRPC servers for Auth, User, Post, Subscription and Data services
-├── controllers             # Controllers for the various endpoints defined in web.go
-├── dtos                    # Data Transfer Objects (shapes the data in the format expected by the UI)
+  ├── proto                 # Contains all the protocol buffers
+  ├── utilities             # Contains methods and structures common to the entire project
+  ├── requests.go           # A handy struct to hold commonly used params in DAL functions
+├── config                  # Initial entries for the etcd data store
+├── test                    # Test cases for the project
+  ├── route_testing.go        # Integration tests
+  └── service_test.go         # Service tests 
+|── APIGateway              # Main backend - communicates with other microservies and provides REST APIs
+  ├── controllers             # Controllers for the various endpoints defined in web.go
+  ├── dtos                    # Data Transfer Objects (shapes the data in the format expected by the UI)
+  ├── common
+    ├── clients.go            # A wrapper struct for holding all the gRPC client objects
+  └── web.go                  # Contains the gin routes 
 ├── UI                      # ReactJS based UI
-├── web.go                  # Contains the gin routes 
-├── route_testing.go        # Integration tests
-├── service_test.go         # Service tests 
+├── AuthServer              # gRPC microservice for authorization
+  ├── authdal
+├── PostService             # gRPC microservice for managing posts
+  ├── postdal
+├── SubscriptionService     # gRPC microservice for managing subscriptions
+  ├── subscriptiondal
+├── UserService             # gRPC microservice for user management
+  ├── userdal
 ├── go.mod
 ├── .gitignore
 └── README.md
@@ -28,9 +42,6 @@
 | Subscriptions Server | 3005 |
 | UI                   | 3000 |
 | API Gateway          | 8080 |
-
-Each micro-service will be interacting with its own key-val pair in the raft implementation we'll use in stage 3
-So the data server is currently emulating etcd/raft.
  
 ## Setup
 (ensure you have yarn or npm installed)
