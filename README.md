@@ -23,7 +23,6 @@
 | Server               | Port |
 |----------------------|------|
 | Auth Server          | 3004 |
-| Data Server          | 3001 |
 | Posts Server         | 3003 |
 | Users Server         | 3002 |
 | Subscriptions Server | 3005 |

@@ -1,70 +1,68 @@
 package subscriptiondal
 
 import (
-	"context"
 	"ds-project/common/proto/subscriptions"
 	"ds-project/common/utilities"
+	"ds-project/config"
 	"encoding/json"
-	"github.com/coreos/etcd/clientv3"
 	"sync"
 )
 
-type SubscriptionStorage struct {
-	subscriptions map[string][]string
+type SubscriptionDB struct {
+	Subscriptions map[string][]string
 }
 
 var (
 	mutex sync.Mutex
 )
 
-func GetSubscriptions(ctx context.Context, client *clientv3.Client, username string, result chan *subscriptions.GetSubscriptionsResponse, errorChan chan error) {
+func GetSubscriptions(request config.DALRequest, username string, result chan *subscriptions.GetSubscriptionsResponse) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	subscriptionStorage := getSubscriptionCollection(ctx, client, errorChan)
+	subscriptionDB := getSubscriptionCollection(request)
 
-	result <- &subscriptions.GetSubscriptionsResponse{Subscriptions: subscriptionStorage.subscriptions[username]}
+	result <- &subscriptions.GetSubscriptionsResponse{Subscriptions: subscriptionDB.Subscriptions[username]}
 }
 
-func Subscribe(ctx context.Context, client *clientv3.Client, subscriber string, publisher string, result chan bool, errorChan chan error) {
+func Subscribe(request config.DALRequest, subscriber string, publisher string, result chan bool) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	subscriptionStorage := getSubscriptionCollection(ctx, client, errorChan)
-	subscriptionStorage.subscriptions[publisher] = append(subscriptionStorage.subscriptions[publisher], subscriber)
-	updateSubscriptions(subscriptionStorage, ctx, client, result, errorChan)
+	subscriptionDB := getSubscriptionCollection(request)
+	subscriptionDB.Subscriptions[subscriber] = append(subscriptionDB.Subscriptions[subscriber], publisher)
+	updateSubscriptions(subscriptionDB, request, result)
 }
 
-func Unsubscribe(ctx context.Context, client *clientv3.Client, subscriber string, publisher string, result chan bool, errorChan chan error) {
+func Unsubscribe(request config.DALRequest, subscriber string, publisher string, result chan bool) {
 	mutex.Lock()
 	defer mutex.Unlock()
-	subscriptionStorage := getSubscriptionCollection(ctx, client, errorChan)
-	for index, pub := range subscriptionStorage.subscriptions[subscriber] {
+	subscriptionDB := getSubscriptionCollection(request)
+	for index, pub := range subscriptionDB.Subscriptions[subscriber] {
 		if publisher == pub {
-			subscriptionStorage.subscriptions[subscriber] = append(subscriptionStorage.subscriptions[subscriber][:index], subscriptionStorage.subscriptions[subscriber][index+1:]...)
+			subscriptionDB.Subscriptions[subscriber] = append(subscriptionDB.Subscriptions[subscriber][:index], subscriptionDB.Subscriptions[subscriber][index+1:]...)
 		}
 	}
-	updateSubscriptions(subscriptionStorage, ctx, client, result, errorChan)
-
+	updateSubscriptions(subscriptionDB, request, result)
 }
 
-func getSubscriptionCollection(ctx context.Context, client *clientv3.Client, errorChan chan error) *SubscriptionStorage {
-	bytes := utilities.GetKey(ctx, client, "subscriptions")
-	var subscriptionStorage SubscriptionStorage
-	if err := json.Unmarshal(bytes, &subscriptionStorage); err != nil {
-		errorChan <- err
+func getSubscriptionCollection(request config.DALRequest) *SubscriptionDB {
+	bytes := utilities.GetKey(request.Ctx, request.Client, "subscriptions")
+	var subscriptionDB SubscriptionDB
+	if err := json.Unmarshal(bytes, &subscriptionDB); err != nil {
+		request.ErrorChan <- err
 	}
-	return &subscriptionStorage
+	return &subscriptionDB
 }
 
-func updateSubscriptions(storage *SubscriptionStorage, ctx context.Context, client *clientv3.Client, result chan bool, errorChan chan error) {
+func updateSubscriptions(storage *SubscriptionDB, request config.DALRequest, result chan bool) {
 
 	subscriptionsBytes, err := json.Marshal(storage)
 	if err != nil {
-		errorChan <- err
+		request.ErrorChan <- err
 		result <- false
 	}
 
-	utilities.PutKey(ctx, client, "subscriptions", subscriptionsBytes)
+	utilities.PutKey(request.Ctx, request.Client, "subscriptions", subscriptionsBytes)
 	result <- true
 }

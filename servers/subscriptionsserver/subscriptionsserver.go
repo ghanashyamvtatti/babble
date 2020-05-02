@@ -4,6 +4,7 @@ import (
 	"context"
 	"ds-project/DAL/subscriptiondal"
 	"ds-project/common/proto/subscriptions"
+	"ds-project/config"
 	"github.com/coreos/etcd/clientv3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -31,7 +32,12 @@ func (s *SubscriptionServer) Subscribe(ctx context.Context, req *subscriptions.S
 	result := make(chan bool)
 	errorChan := make(chan error)
 
-	go subscriptiondal.Subscribe(ctx, s.client, req.Subscriber, req.Publisher, result, errorChan)
+	request := config.DALRequest{
+		Ctx:       ctx,
+		Client:    s.client,
+		ErrorChan: errorChan,
+	}
+	go subscriptiondal.Subscribe(request, req.Subscriber, req.Publisher, result)
 
 	select {
 	case <-result:
@@ -47,7 +53,13 @@ func (s *SubscriptionServer) Unsubscribe(ctx context.Context, req *subscriptions
 	result := make(chan bool)
 	errorChan := make(chan error)
 
-	go subscriptiondal.Unsubscribe(ctx, s.client, req.Subscriber, req.Publisher, result, errorChan)
+	request := config.DALRequest{
+		Ctx:       ctx,
+		Client:    s.client,
+		ErrorChan: errorChan,
+	}
+
+	go subscriptiondal.Unsubscribe(request, req.Subscriber, req.Publisher, result)
 
 	select {
 	case <-result:
@@ -62,7 +74,12 @@ func (s *SubscriptionServer) Unsubscribe(ctx context.Context, req *subscriptions
 func (s *SubscriptionServer) GetSubscriptions(ctx context.Context, req *subscriptions.GetSubscriptionsRequest) (*subscriptions.GetSubscriptionsResponse, error) {
 	result := make(chan *subscriptions.GetSubscriptionsResponse)
 	errorChan := make(chan error)
-	go subscriptiondal.GetSubscriptions(ctx, s.client, req.Username, result, errorChan)
+	request := config.DALRequest{
+		Ctx:       ctx,
+		Client:    s.client,
+		ErrorChan: errorChan,
+	}
+	go subscriptiondal.GetSubscriptions(request, req.Username, result)
 
 	select {
 	case res := <-result:

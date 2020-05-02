@@ -3,13 +3,12 @@ package main
 import (
 	"context"
 	"ds-project/common/proto/models"
-	"ds-project/raft"
+	"ds-project/common/utilities"
 	"encoding/json"
 	"fmt"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/golang/protobuf/ptypes"
 	"time"
-	// "reflect"
 )
 
 var (
@@ -25,6 +24,14 @@ type TokenDB struct {
 	Tokens map[string]string
 }
 
+type SubscriptionDB struct {
+	Subscriptions map[string][]string
+}
+
+type PostDB struct {
+	Posts map[string][]*models.Post
+}
+
 func main() {
 	ctx, _ := context.WithTimeout(context.Background(), requestTimeout)
 	cli, _ := clientv3.New(clientv3.Config{
@@ -32,10 +39,9 @@ func main() {
 		Endpoints:   []string{"127.0.0.1:2379"},
 	})
 	defer cli.Close()
-	kv := clientv3.NewKV(cli)
 
-	kv.Delete(ctx, "users", clientv3.WithPrefix())
-	kv.Delete(ctx, "tokens", clientv3.WithPrefix())
+	cli.Delete(ctx, "users", clientv3.WithPrefix())
+	cli.Delete(ctx, "tokens", clientv3.WithPrefix())
 
 	users := &UsersDB{
 		Users: map[string]*models.User{},
@@ -44,6 +50,10 @@ func main() {
 	tokens := &TokenDB{
 		Tokens: map[string]string{},
 	}
+
+	subscriptions := &SubscriptionDB{Subscriptions: map[string][]string{}}
+
+	posts := &PostDB{Posts: map[string][]*models.Post{}}
 
 	users.Users["ghanu"] = &models.User{
 		FullName:  "Ghanashyam",
@@ -71,9 +81,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	raft.PutKey(ctx, kv, "users", marshalledUser)
+	utilities.PutKey(ctx, cli, "users", marshalledUser)
 
-	bt := raft.GetKey(ctx, kv, "users")
+	bt := utilities.GetKey(ctx, cli, "users")
 	var c UsersDB
 	er := json.Unmarshal(bt, &c)
 	if er != nil {
@@ -90,9 +100,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	raft.PutKey(ctx, kv, "tokens", marshalledToken)
+	utilities.PutKey(ctx, cli, "tokens", marshalledToken)
 
-	bt1 := raft.GetKey(ctx, kv, "tokens")
+	bt1 := utilities.GetKey(ctx, cli, "tokens")
 	var c1 TokenDB
 	er1 := json.Unmarshal(bt1, &c1)
 	if er1 != nil {
@@ -100,4 +110,98 @@ func main() {
 	}
 
 	fmt.Println(c1)
+
+	// Subscriptions
+	subscriptions.Subscriptions["ghanu"] = append(subscriptions.Subscriptions["ghanu"], "ghanu")
+	subscriptions.Subscriptions["ghanu"] = append(subscriptions.Subscriptions["ghanu"], "varun")
+
+	subscriptions.Subscriptions["varun"] = append(subscriptions.Subscriptions["varun"], "varun")
+	subscriptions.Subscriptions["varun"] = append(subscriptions.Subscriptions["varun"], "pratik")
+
+	marshalledSubs, err := json.Marshal(subscriptions)
+	if err != nil {
+		panic(err)
+	}
+
+	utilities.PutKey(ctx, cli, "subscriptions", marshalledSubs)
+
+	bt2 := utilities.GetKey(ctx, cli, "subscriptions")
+	var c2 SubscriptionDB
+	er2 := json.Unmarshal(bt2, &c2)
+	if er2 != nil {
+		panic(er2)
+	}
+	fmt.Println(c2)
+
+	posts.Posts["ghanu"] = append(posts.Posts["ghanu"], &models.Post{
+		Post:      "Hello World! This is Ghanashyam.",
+		Username:  "ghanu",
+		CreatedAt: ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
+	})
+	posts.Posts["ghanu"] = append(posts.Posts["ghanu"], &models.Post{
+		Post:      "WOLOLO!",
+		Username:  "ghanu",
+		CreatedAt: ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
+	})
+	posts.Posts["ghanu"] = append(posts.Posts["ghanu"], &models.Post{
+		Post:      "Knock Knock. Anybody there?",
+		Username:  "ghanu",
+		CreatedAt: ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
+	})
+
+	posts.Posts["varun"] = append(posts.Posts["varun"], &models.Post{
+		Post:      "My name is Varun.",
+		Username:  "varun",
+		CreatedAt: ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
+	})
+	posts.Posts["varun"] = append(posts.Posts["varun"], &models.Post{
+		Post:      "I hope this application works well",
+		Username:  "varun",
+		CreatedAt: ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
+	})
+	posts.Posts["varun"] = append(posts.Posts["varun"], &models.Post{
+		Post:      "Hey! I'm here!",
+		Username:  "varun",
+		CreatedAt: ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
+	})
+
+	posts.Posts["pratik"] = append(posts.Posts["pratik"], &models.Post{
+		Post:      "Pratik is here!",
+		Username:  "pratik",
+		CreatedAt: ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
+	})
+	posts.Posts["pratik"] = append(posts.Posts["pratik"], &models.Post{
+		Post:      "I wonder what time it is in Mars",
+		Username:  "pratik",
+		CreatedAt: ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
+	})
+	posts.Posts["pratik"] = append(posts.Posts["pratik"], &models.Post{
+		Post:      "lorem ipsum",
+		Username:  "pratik",
+		CreatedAt: ptypes.TimestampNow(),
+		UpdatedAt: ptypes.TimestampNow(),
+	})
+
+	marshalledPosts, err := json.Marshal(posts)
+	if err != nil {
+		panic(err)
+	}
+
+	utilities.PutKey(ctx, cli, "posts", marshalledPosts)
+
+	bt3 := utilities.GetKey(ctx, cli, "posts")
+	var c3 PostDB
+	err = json.Unmarshal(bt3, &c3)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(c3)
 }

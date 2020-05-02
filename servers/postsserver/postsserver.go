@@ -2,23 +2,28 @@ package main
 
 import (
 	"context"
-	"ds-project/common/proto/dsl"
+	"ds-project/DAL/postdal"
 	"ds-project/common/proto/models"
 	"ds-project/common/proto/posts"
-	"github.com/golang/protobuf/ptypes"
+	subscriptions "ds-project/common/proto/subscriptions"
+	"ds-project/config"
+	"github.com/coreos/etcd/clientv3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
-	"sort"
-	"sync"
+	"time"
 )
 
 type PostsServer struct {
 	posts.UnimplementedPostsServiceServer
-	mutex     sync.Mutex
-	dslClient dsl.DataServiceClient
+	client             *clientv3.Client
+	subscriptionClient subscriptions.SubscriptionServiceClient
 }
+
+var (
+	dialTimeout = 2 * time.Second
+)
 
 /*
 PostService
@@ -28,47 +33,69 @@ PostService
 */
 
 func (server *PostsServer) AddPost(ctx context.Context, post *posts.AddPostRequest) (*posts.AddPostResponse, error) {
-	server.mutex.Lock()
-	defer server.mutex.Unlock()
-	dslResponse, err := server.dslClient.AddPost(ctx, &dsl.AddPostRequest{
-		Username: post.Username,
-		Post:     post.Post,
-	})
-	if err == nil {
-		response := &posts.AddPostResponse{Ok: dslResponse.Ok}
-		return response, err
-	} else {
+	result := make(chan bool)
+	errorChan := make(chan error)
+
+	request := config.DALRequest{
+		Ctx:       ctx,
+		Client:    server.client,
+		ErrorChan: errorChan,
+	}
+
+	go postdal.AddPost(request, post.Username, post.Post, result)
+
+	select {
+	case res := <-result:
+		return &posts.AddPostResponse{Ok: res}, nil
+	case err := <-errorChan:
 		return &posts.AddPostResponse{Ok: false}, err
+	case <-ctx.Done():
+		return &posts.AddPostResponse{Ok: false}, ctx.Err()
 	}
 }
 
 func (server *PostsServer) GetPosts(ctx context.Context, req *posts.GetPostsRequest) (*posts.GetPostsResponse, error) {
-	dslResponse, err := server.dslClient.GetPosts(ctx, &dsl.GetPostsRequest{Username: req.Username})
-	if err == nil {
-		response := &posts.GetPostsResponse{Posts: dslResponse.Posts}
-		return response, err
-	} else {
-		return &posts.GetPostsResponse{
-			Posts: nil,
-		}, nil
+	result := make(chan *posts.GetPostsResponse)
+	errorChan := make(chan error)
+
+	request := config.DALRequest{
+		Ctx:       ctx,
+		Client:    server.client,
+		ErrorChan: errorChan,
+	}
+
+	go postdal.GetPosts(request, req.Username, result)
+
+	select {
+	case res := <-result:
+		return res, nil
+	case err := <-errorChan:
+		return &posts.GetPostsResponse{Posts: nil}, err
+	case <-ctx.Done():
+		return &posts.GetPostsResponse{}, ctx.Err()
 	}
 }
 
 func (server *PostsServer) GetFeed(ctx context.Context, req *posts.GetPostsRequest) (*posts.GetPostsResponse, error) {
-	subscriptions, _ := server.dslClient.GetSubscriptions(ctx, &dsl.GetSubscriptionsRequest{Username: req.Username})
-	var responsePosts []*models.Post
+	result := make(chan []*models.Post)
+	errorChan := make(chan error)
 
-	for _, subscription := range subscriptions.Subscriptions {
-		response, _ := server.dslClient.GetPosts(ctx, &dsl.GetPostsRequest{Username: subscription})
-		userPosts := response.Posts
-		responsePosts = append(responsePosts, userPosts...)
+	request := config.DALRequest{
+		Ctx:       ctx,
+		Client:    server.client,
+		ErrorChan: errorChan,
 	}
-	sort.Slice(responsePosts, func(i, j int) bool {
-		iTime, _ := ptypes.Timestamp(responsePosts[i].CreatedAt)
-		jTime, _ := ptypes.Timestamp(responsePosts[j].CreatedAt)
-		return iTime.After(jTime)
-	})
-	return &posts.GetPostsResponse{Posts: responsePosts}, nil
+	subs, _ := server.subscriptionClient.GetSubscriptions(ctx, &subscriptions.GetSubscriptionsRequest{Username: req.Username})
+	go postdal.GetFeed(request, subs.Subscriptions, result)
+
+	select {
+	case responsePosts := <-result:
+		return &posts.GetPostsResponse{Posts: responsePosts}, nil
+	case err := <-errorChan:
+		return &posts.GetPostsResponse{Posts: nil}, err
+	case <-ctx.Done():
+		return &posts.GetPostsResponse{Posts: nil}, ctx.Err()
+	}
 }
 
 func main() {
@@ -77,17 +104,20 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	// Set up a connection to the DSL server.
-	conn, err := grpc.Dial("localhost:3001", grpc.WithInsecure(), grpc.WithBlock())
+	// Set up a connection to etcd.
+	cli, _ := clientv3.New(clientv3.Config{
+		DialTimeout: dialTimeout,
+		Endpoints:   []string{"127.0.0.1:2379"},
+	})
+	defer cli.Close()
 
+	subscriptionConnection, err := grpc.Dial("localhost:3005", grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		panic(err)
 	}
-	defer conn.Close()
-	dslClient := dsl.NewDataServiceClient(conn)
 
 	server := grpc.NewServer()
-	posts.RegisterPostsServiceServer(server, &PostsServer{dslClient: dslClient})
+	posts.RegisterPostsServiceServer(server, &PostsServer{client: cli, subscriptionClient: subscriptions.NewSubscriptionServiceClient(subscriptionConnection)})
 	reflection.Register(server)
 	log.Println("Posts service running on :3003")
 	if err := server.Serve(listener); err != nil {
