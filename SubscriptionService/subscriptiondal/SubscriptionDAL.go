@@ -30,6 +30,14 @@ func (dal *SubscriptionDAL) Subscribe(request common.DALRequest, subscriber stri
 	defer dal.Mutex.Unlock()
 
 	subscriptionDB := getSubscriptionCollection(request)
+
+	// Ensures that there are no duplicate entries
+	for _, pub := range subscriptionDB.Subscriptions[subscriber] {
+		if publisher == pub {
+			result <- true
+			return
+		}
+	}
 	subscriptionDB.Subscriptions[subscriber] = append(subscriptionDB.Subscriptions[subscriber], publisher)
 	updateSubscriptions(subscriptionDB, request, result)
 }

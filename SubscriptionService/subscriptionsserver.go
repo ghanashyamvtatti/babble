@@ -47,6 +47,10 @@ func (s *SubscriptionServer) Subscribe(ctx context.Context, req *subscriptions.S
 	case err := <-errorChan:
 		return &subscriptions.SubscribeResponse{}, err
 	case <-ctx.Done():
+		ok := <-result
+		if ok {
+			s.Unsubscribe(context.Background(), req)
+		}
 		return &subscriptions.SubscribeResponse{}, ctx.Err()
 	}
 }
@@ -69,6 +73,10 @@ func (s *SubscriptionServer) Unsubscribe(ctx context.Context, req *subscriptions
 	case err := <-errorChan:
 		return &subscriptions.SubscribeResponse{}, err
 	case <-ctx.Done():
+		ok := <-result
+		if ok {
+			s.Subscribe(context.Background(), req)
+		}
 		return &subscriptions.SubscribeResponse{}, ctx.Err()
 	}
 }
