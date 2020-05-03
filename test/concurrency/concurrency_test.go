@@ -2,26 +2,17 @@ package concurrency
 
 import (
 	"context"
-	// "ds-project/common/proto/auth"
 	"ds-project/common/proto/posts"
-	// "ds-project/common/proto/subscriptions"
-	// "ds-project/common/proto/users"
 	"fmt"
 	"google.golang.org/grpc"
 	"log"
 	"sync"
 	"testing"
-	// "time"
-	// "github.com/coreos/etcd/clientv3"
-	// "ds-project/UserService/userdal"
-	// "ds-project/common/proto/models"
-	// "ds-project/common"
 )
 
-var (  
-    concurrencyFactor    = 1000
+var (
+	concurrencyFactor = 1000
 )
-
 
 func TestMultiplePost(t *testing.T) {
 	log.Println("Testing Post Services")
@@ -49,7 +40,6 @@ func TestMultiplePost(t *testing.T) {
 				log.Println(err)
 				t.Error("fails")
 			}
-			// log.Println(response.Ok)
 
 		}(idx)
 	}
@@ -58,4 +48,3 @@ func TestMultiplePost(t *testing.T) {
 
 	log.Println("Pass TestMultiplePost")
 }
-

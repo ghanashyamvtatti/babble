@@ -52,6 +52,36 @@ func (server *PostsServer) AddPost(ctx context.Context, post *posts.AddPostReque
 	case err := <-errorChan:
 		return &posts.AddPostResponse{Ok: false}, err
 	case <-ctx.Done():
+		res := <-result
+		if res {
+			server.DeletePost(context.Background(), post)
+		}
+		return &posts.AddPostResponse{Ok: false}, ctx.Err()
+	}
+}
+
+func (server *PostsServer) DeletePost(ctx context.Context, post *posts.AddPostRequest) (*posts.AddPostResponse, error) {
+	result := make(chan bool)
+	errorChan := make(chan error)
+
+	request := common.DALRequest{
+		Ctx:       ctx,
+		Client:    server.client,
+		ErrorChan: errorChan,
+	}
+
+	go server.postDAL.DeletePost(request, post.Username, post.Post, result)
+
+	select {
+	case res := <-result:
+		return &posts.AddPostResponse{Ok: res}, nil
+	case err := <-errorChan:
+		return &posts.AddPostResponse{Ok: false}, err
+	case <-ctx.Done():
+		res := <-result
+		if res {
+			server.AddPost(context.Background(), post)
+		}
 		return &posts.AddPostResponse{Ok: false}, ctx.Err()
 	}
 }
