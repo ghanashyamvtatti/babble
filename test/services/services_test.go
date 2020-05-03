@@ -9,104 +9,15 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"log"
-	"sync"
+	// "sync"
 	"testing"
-	"time"
-	"github.com/coreos/etcd/clientv3"
-	"ds-project/UserService/userdal"
-	"ds-project/common/proto/models"
-	"ds-project/common"
+	// "time"
+	// "github.com/coreos/etcd/clientv3"
+	// "ds-project/UserService/userdal"
+	// "ds-project/common/proto/models"
+	// "ds-project/common"
 )
 
-
-var (  
-    dialTimeout    = 2 * time.Second
-    requestTimeout = 10 * time.Second
-)
-// Test cases for User Service
-
-func TestUserDALStorageGetUsers(t *testing.T) {
-	log.Println("Testing User DAL Storage")
-	cli, _ := clientv3.New(clientv3.Config{
-        DialTimeout: dialTimeout,
-        Endpoints: []string{"127.0.0.1:2379"},
-    })
-    defer cli.Close()
-    // keyVal := clientv3.NewKV(cli)
-
-	res := make(chan *models.User)
-	errorChan := make(chan error)
-
-	request := common.DALRequest{
-		Ctx:       context.Background(),
-		Client:    cli,
-		ErrorChan: errorChan,
-	}
-
-	ctx := context.Background()
-	dal := userdal.UserDAL{Mutex: sync.Mutex{}}
-
-	go dal.GetUser(request, "ghanu", res)
-
-	select{
-	case us := <-res:
-		fmt.Println(us)
-	case err := <-errorChan:
-		fmt.Println(err)
-		t.Error("fails")
-	case <- ctx.Done():
-		fmt.Println(ctx.Done())
-		t.Error("fails")
-	}
-}
-
-func TestUserDALStorageGetUsersWithCancelledContext(t *testing.T) {
-	log.Println("Testing User DAL Storage with Cancelled Context")
-	cli, _ := clientv3.New(clientv3.Config{
-        DialTimeout: dialTimeout,
-        Endpoints: []string{"127.0.0.1:2379"},
-    })
-    defer cli.Close()
-    // keyVal := clientv3.NewKV(cli)
-
-	res := make(chan *models.User)
-	errorChan := make(chan error)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	//ctx, _ := context.WithTimeout(context.Background(),time.Duration(2*time.Second))
-
-    
-
-
-	request := common.DALRequest{
-		Ctx:       ctx,
-		Client:    cli,
-		ErrorChan: errorChan,
-	}
-
-	
-	dal := userdal.UserDAL{Mutex: sync.Mutex{}}
-
-	// time.Sleep(3 * time.Second)
-	go dal.GetUser(request, "ghanu", res)
-
-
-	select{
-	case us := <-res:
-		fmt.Println(us)
-	case err := <-errorChan:
-		fmt.Println(err)
-		t.Error("fails")
-	case <- ctx.Done():
-		fmt.Println(ctx.Err())
-		fmt.Println("Cancelled context case")
-		// fmt.Println(ctx.Done())
-		// t.Error("fails")
-	}
-
-	//defer cancel()
-}
 
 
 // Test cases for User Service
@@ -181,43 +92,43 @@ func TestGetUserDetails(t *testing.T) {
 	// log.Println(resp.Username)
 }
 
-// Test cases for Post Service
+// // Test cases for Post Service
 
-func TestMultiplePost(t *testing.T) {
-	log.Println("Testing Post Services")
-	fmt.Println("Testing add multiple post service")
+// func TestMultiplePost(t *testing.T) {
+// 	log.Println("Testing Post Services")
+// 	fmt.Println("Testing add multiple post service")
 
-	postConnection, err := grpc.Dial("localhost:3003", grpc.WithInsecure())
-	if err != nil {
-		panic(err)
-	}
+// 	postConnection, err := grpc.Dial("localhost:3003", grpc.WithInsecure())
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	postClient := posts.NewPostsServiceClient(postConnection)
-	wg := sync.WaitGroup{}
-	for idx := 0; idx < 1000; idx++ {
-		wg.Add(1)
+// 	postClient := posts.NewPostsServiceClient(postConnection)
+// 	wg := sync.WaitGroup{}
+// 	for idx := 0; idx < 1000; idx++ {
+// 		wg.Add(1)
 
-		go func(idx int) {
-			defer wg.Done()
+// 		go func(idx int) {
+// 			defer wg.Done()
 
-			_, err := postClient.AddPost(context.Background(), &posts.AddPostRequest{
-				Username: "varun",
-				Post:     "New POST :" + string(idx),
-			})
+// 			_, err := postClient.AddPost(context.Background(), &posts.AddPostRequest{
+// 				Username: "varun",
+// 				Post:     "New POST :" + string(idx),
+// 			})
 
-			if err != nil {
-				log.Println(err)
-				t.Error("fails")
-			}
-			// log.Println(response.Ok)
+// 			if err != nil {
+// 				log.Println(err)
+// 				t.Error("fails")
+// 			}
+// 			// log.Println(response.Ok)
 
-		}(idx)
-	}
+// 		}(idx)
+// 	}
 
-	wg.Wait()
+// 	wg.Wait()
 
-	log.Println("Pass TestMultiplePost")
-}
+// 	log.Println("Pass TestMultiplePost")
+// }
 
 func TestGetFeed(t *testing.T) {
 	fmt.Println("Testing get feed")
