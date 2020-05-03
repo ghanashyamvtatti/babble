@@ -15,13 +15,13 @@ type PostDB struct {
 	Posts map[string][]*models.Post
 }
 
-var (
-	mutex sync.Mutex
-)
+type PostDAL struct {
+	Mutex sync.Mutex
+}
 
-func AddPost(request common.DALRequest, username string, post string, result chan bool) {
-	mutex.Lock()
-	defer mutex.Unlock()
+func (postDAL *PostDAL) AddPost(request common.DALRequest, username string, post string, result chan bool) {
+	postDAL.Mutex.Lock()
+	defer postDAL.Mutex.Unlock()
 
 	newPost := &models.Post{
 		Post:      post,
@@ -35,18 +35,18 @@ func AddPost(request common.DALRequest, username string, post string, result cha
 	updatePosts(postDB, request, result)
 }
 
-func GetPosts(request common.DALRequest, username string, result chan *posts.GetPostsResponse) {
-	mutex.Lock()
-	defer mutex.Unlock()
+func (postDAL *PostDAL) GetPosts(request common.DALRequest, username string, result chan *posts.GetPostsResponse) {
+	postDAL.Mutex.Lock()
+	defer postDAL.Mutex.Unlock()
 
 	postDB := getPostCollection(request)
 
 	result <- &posts.GetPostsResponse{Posts: postDB.Posts[username]}
 }
 
-func GetFeed(request common.DALRequest, subscriptions []string, result chan []*models.Post) {
-	mutex.Lock()
-	defer mutex.Unlock()
+func (postDAL *PostDAL) GetFeed(request common.DALRequest, subscriptions []string, result chan []*models.Post) {
+	postDAL.Mutex.Lock()
+	defer postDAL.Mutex.Unlock()
 
 	postDB := getPostCollection(request)
 	var responsePosts []*models.Post

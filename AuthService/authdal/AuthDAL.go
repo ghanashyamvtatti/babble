@@ -7,17 +7,17 @@ import (
 	"sync"
 )
 
-var (
-	mutex sync.Mutex
-)
-
 type TokenDB struct {
 	Tokens map[string]string
 }
 
-func SetAccessToken(request common.DALRequest, username string, token string, result chan bool) {
-	mutex.Lock()
-	defer mutex.Unlock()
+type AuthDAL struct {
+	Mutex sync.Mutex
+}
+
+func (authDAL *AuthDAL) SetAccessToken(request common.DALRequest, username string, token string, result chan bool) {
+	authDAL.Mutex.Lock()
+	defer authDAL.Mutex.Unlock()
 
 	bt := utilities.GetKey(request.Ctx, request.Client, "tokens")
 	var r TokenDB
@@ -34,9 +34,9 @@ func SetAccessToken(request common.DALRequest, username string, token string, re
 	return
 }
 
-func GetAccessToken(request common.DALRequest, username string, result chan string) {
-	mutex.Lock()
-	defer mutex.Unlock()
+func (authDAL *AuthDAL) GetAccessToken(request common.DALRequest, username string, result chan string) {
+	authDAL.Mutex.Lock()
+	defer authDAL.Mutex.Unlock()
 
 	bt := utilities.GetKey(request.Ctx, request.Client, "tokens")
 	var r TokenDB
@@ -51,9 +51,9 @@ func GetAccessToken(request common.DALRequest, username string, result chan stri
 	return
 }
 
-func DeleteAccessToken(request common.DALRequest, username string, result chan bool) {
-	mutex.Lock()
-	defer mutex.Unlock()
+func (authDAL *AuthDAL) DeleteAccessToken(request common.DALRequest, username string, result chan bool) {
+	authDAL.Mutex.Lock()
+	defer authDAL.Mutex.Unlock()
 
 	bt := utilities.GetKey(request.Ctx, request.Client, "tokens")
 	var r TokenDB

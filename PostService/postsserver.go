@@ -6,12 +6,13 @@ import (
 	"ds-project/common"
 	"ds-project/common/proto/models"
 	"ds-project/common/proto/posts"
-	subscriptions "ds-project/common/proto/subscriptions"
+	"ds-project/common/proto/subscriptions"
 	"github.com/coreos/etcd/clientv3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
+	"sync"
 	"time"
 )
 
@@ -19,6 +20,7 @@ type PostsServer struct {
 	posts.UnimplementedPostsServiceServer
 	client             *clientv3.Client
 	subscriptionClient subscriptions.SubscriptionServiceClient
+	postDAL            postdal.PostDAL
 }
 
 var (
@@ -42,7 +44,7 @@ func (server *PostsServer) AddPost(ctx context.Context, post *posts.AddPostReque
 		ErrorChan: errorChan,
 	}
 
-	go postdal.AddPost(request, post.Username, post.Post, result)
+	go server.postDAL.AddPost(request, post.Username, post.Post, result)
 
 	select {
 	case res := <-result:
@@ -64,7 +66,7 @@ func (server *PostsServer) GetPosts(ctx context.Context, req *posts.GetPostsRequ
 		ErrorChan: errorChan,
 	}
 
-	go postdal.GetPosts(request, req.Username, result)
+	go server.postDAL.GetPosts(request, req.Username, result)
 
 	select {
 	case res := <-result:
@@ -86,7 +88,7 @@ func (server *PostsServer) GetFeed(ctx context.Context, req *posts.GetPostsReque
 		ErrorChan: errorChan,
 	}
 	subs, _ := server.subscriptionClient.GetSubscriptions(ctx, &subscriptions.GetSubscriptionsRequest{Username: req.Username})
-	go postdal.GetFeed(request, subs.Subscriptions, result)
+	go server.postDAL.GetFeed(request, subs.Subscriptions, result)
 
 	select {
 	case responsePosts := <-result:
@@ -117,7 +119,11 @@ func main() {
 	}
 
 	server := grpc.NewServer()
-	posts.RegisterPostsServiceServer(server, &PostsServer{client: cli, subscriptionClient: subscriptions.NewSubscriptionServiceClient(subscriptionConnection)})
+	posts.RegisterPostsServiceServer(server, &PostsServer{
+		client:             cli,
+		subscriptionClient: subscriptions.NewSubscriptionServiceClient(subscriptionConnection),
+		postDAL:            postdal.PostDAL{Mutex: sync.Mutex{}},
+	})
 	reflection.Register(server)
 	log.Println("Posts service running on :3003")
 	if err := server.Serve(listener); err != nil {

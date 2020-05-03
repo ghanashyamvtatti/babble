@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
+	"sync"
 	"time"
 )
 
@@ -24,6 +25,7 @@ type AuthServer struct {
 	auth.UnimplementedAuthServiceServer
 	client     *clientv3.Client
 	userClient users.UserServiceClient
+	authDAL    authdal.AuthDAL
 }
 
 /*
@@ -49,7 +51,7 @@ func (s *AuthServer) GenerateAccessToken(ctx context.Context, req *auth.Generate
 		ErrorChan: errorChan,
 	}
 
-	go authdal.SetAccessToken(request, req.Username, token.String(), result)
+	go s.authDAL.SetAccessToken(request, req.Username, token.String(), result)
 
 	select {
 	case <-result:
@@ -72,7 +74,7 @@ func (s *AuthServer) CheckAccessTokenValid(ctx context.Context, req *auth.TokenV
 		ErrorChan: errorChan,
 	}
 
-	go authdal.GetAccessToken(request, req.Username, result)
+	go s.authDAL.GetAccessToken(request, req.Username, result)
 
 	select {
 	case token := <-result:
@@ -92,7 +94,7 @@ func (s *AuthServer) CheckAccessTokenValid(ctx context.Context, req *auth.TokenV
 func (s *AuthServer) Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
 	response, err := s.userClient.GetUser(ctx, &users.GetUserRequest{Username: req.Username})
 
-	if err != nil {
+	if err != nil || response.User == nil {
 		return &auth.LoginResponse{Ok: false}, err
 	} else {
 		if utilities.CheckPasswordHash(req.Password, response.User.Password) {
@@ -113,7 +115,7 @@ func (s *AuthServer) Logout(ctx context.Context, req *auth.LogoutRequest) (*auth
 		Client:    s.client,
 		ErrorChan: errorChan,
 	}
-	go authdal.DeleteAccessToken(request, req.Username, result)
+	go s.authDAL.DeleteAccessToken(request, req.Username, result)
 
 	select {
 	case <-result:
@@ -143,7 +145,11 @@ func main() {
 	}
 
 	server := grpc.NewServer()
-	auth.RegisterAuthServiceServer(server, &AuthServer{client: cli, userClient: users.NewUserServiceClient(userConnection)})
+	auth.RegisterAuthServiceServer(server, &AuthServer{
+		client:     cli,
+		userClient: users.NewUserServiceClient(userConnection),
+		authDAL:    authdal.AuthDAL{Mutex: sync.Mutex{}},
+	})
 	reflection.Register(server)
 	log.Println("Auth service running on :3004")
 	if err := server.Serve(listener); err != nil {
