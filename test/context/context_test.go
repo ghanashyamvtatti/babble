@@ -10,19 +10,6 @@ import (
 )
 
 // Test cases for User Service
-func TestUserServiceGetUsers(t *testing.T) {
-	log.Println("Testing UserService")
-	userConnection, err := grpc.Dial("localhost:3002", grpc.WithInsecure())
-	if err != nil {
-		panic(err)
-	}
-	userClient := users.NewUserServiceClient(userConnection)
-	response, err := userClient.GetUsers(context.Background(), &users.GetUsersRequest{})
-	fmt.Println(response)
-	if err != nil {
-		t.Fatal("GetUsers failed. Error: ", err.Error())
-	}
-}
 
 func TestUserServiceGetUsersWithCancelledContext(t *testing.T) {
 	log.Println("Testing UserService with cancelled context")
