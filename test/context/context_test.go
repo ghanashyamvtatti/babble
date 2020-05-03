@@ -5,6 +5,7 @@ import (
 	"ds-project/UserService/userdal"
 	"ds-project/common"
 	"ds-project/common/proto/models"
+	"ds-project/common/proto/posts"
 	"ds-project/common/proto/subscriptions"
 	"fmt"
 	"github.com/coreos/etcd/clientv3"
@@ -172,4 +173,31 @@ func TestUnsubscribeContextCancelled(t *testing.T) {
 		}
 	}
 	t.Error("Subscription doesn't exist. Test case failed")
+}
+
+// Test cases for Posts
+func TestAddPostForContextCancelled(t *testing.T) {
+	postConnection, err := grpc.Dial("localhost:3003", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+	postmsg := "TestAddPostContextCancelled"
+	client := posts.NewPostsServiceClient(postConnection)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_, err = client.AddPost(ctx, &posts.AddPostRequest{Username: "ghanu", Post: postmsg})
+	// First check err message
+	if err == nil || err.Error() != contextCancelErrMsg {
+		t.Error("Test case failed")
+	}
+
+	// Next check if the post is present
+	response, _ := client.GetPosts(context.Background(), &posts.GetPostsRequest{Username: "ghanu"})
+	for _, post := range response.Posts {
+		if post.Post == postmsg {
+			t.Error("Post still exists. Test case failed")
+			return
+		}
+	}
+	t.Log("Test case passed")
 }

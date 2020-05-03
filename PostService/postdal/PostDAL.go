@@ -35,6 +35,19 @@ func (postDAL *PostDAL) AddPost(request common.DALRequest, username string, post
 	updatePosts(postDB, request, result)
 }
 
+func (postDAL *PostDAL) DeletePost(request common.DALRequest, username string, delPost string, result chan bool) {
+	postDAL.Mutex.Lock()
+	defer postDAL.Mutex.Unlock()
+
+	postDB := getPostCollection(request)
+	for index, post := range postDB.Posts[username] {
+		if post.Post == delPost {
+			postDB.Posts[username] = append(postDB.Posts[username][:index], postDB.Posts[username][index+1:]...)
+		}
+	}
+	updatePosts(postDB, request, result)
+}
+
 func (postDAL *PostDAL) GetPosts(request common.DALRequest, username string, result chan *posts.GetPostsResponse) {
 	postDAL.Mutex.Lock()
 	defer postDAL.Mutex.Unlock()
