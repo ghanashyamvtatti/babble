@@ -42,6 +42,8 @@ func main() {
 
 	cli.Delete(ctx, "users", clientv3.WithPrefix())
 	cli.Delete(ctx, "tokens", clientv3.WithPrefix())
+	cli.Delete(ctx, "subscriptions", clientv3.WithPrefix())
+	cli.Delete(ctx, "posts", clientv3.WithPrefix())
 
 	users := &UsersDB{
 		Users: map[string]*models.User{},

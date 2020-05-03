@@ -1,5 +1,5 @@
 start etcd --name s2 ^
-  --data-dir /tmp/etcd/s2 ^
+  --data-dir /tmp/etcd/s112 ^
   --listen-client-urls http://localhost:22379 ^
   --advertise-client-urls http://localhost:22379 ^
   --listen-peer-urls http://localhost:22380 ^
@@ -10,7 +10,7 @@ start etcd --name s2 ^
 
 
 start etcd --name s3 ^
-  --data-dir /tmp/etcd/s3 ^
+  --data-dir /tmp/etcd/s113 ^
   --listen-client-urls http://localhost:32379 ^
   --advertise-client-urls http://localhost:32379 ^
   --listen-peer-urls http://localhost:32380 ^
@@ -20,7 +20,7 @@ start etcd --name s3 ^
   --initial-cluster-state new
 
 etcd --name s1 ^
-  --data-dir /tmp/etcd/s1 ^
+  --data-dir /tmp/etcd/s111 ^
   --listen-client-urls http://localhost:2379 ^
   --advertise-client-urls http://localhost:2379 ^
   --listen-peer-urls http://localhost:2380 ^
