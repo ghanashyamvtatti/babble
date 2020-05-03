@@ -13,14 +13,14 @@ type UsersDB struct {
 	Users map[string]*models.User
 }
 
-var (
-	mutex sync.Mutex
-)
+type UserDAL struct {
+	Mutex sync.Mutex
+}
 
-func GetUser(request common.DALRequest, username string, res chan *models.User) {
+func (dal *UserDAL) GetUser(request common.DALRequest, username string, res chan *models.User) {
 
-	mutex.Lock()
-	defer mutex.Unlock()
+	dal.Mutex.Lock()
+	defer dal.Mutex.Unlock()
 
 	bt := utilities.GetKey(request.Ctx, request.Client, "users")
 	var r UsersDB
@@ -34,10 +34,10 @@ func GetUser(request common.DALRequest, username string, res chan *models.User) 
 	return
 }
 
-func GetUsers(request common.DALRequest, res chan map[string]*models.User) {
+func (dal *UserDAL) GetUsers(request common.DALRequest, res chan map[string]*models.User) {
 
-	mutex.Lock()
-	defer mutex.Unlock()
+	dal.Mutex.Lock()
+	defer dal.Mutex.Unlock()
 
 	bt := utilities.GetKey(request.Ctx, request.Client, "users")
 	var r UsersDB
@@ -50,10 +50,10 @@ func GetUsers(request common.DALRequest, res chan map[string]*models.User) {
 	return
 }
 
-func CreateUser(request common.DALRequest, username string, value *models.User, res chan bool) {
+func (dal *UserDAL) CreateUser(request common.DALRequest, username string, value *models.User, res chan bool) {
 
-	mutex.Lock()
-	defer mutex.Unlock()
+	dal.Mutex.Lock()
+	defer dal.Mutex.Unlock()
 
 	bt := utilities.GetKey(request.Ctx, request.Client, "users")
 	var r UsersDB

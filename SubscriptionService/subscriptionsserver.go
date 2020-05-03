@@ -10,12 +10,14 @@ import (
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
+	"sync"
 	"time"
 )
 
 type SubscriptionServer struct {
 	subscriptions.UnimplementedSubscriptionServiceServer
 	client *clientv3.Client
+	dal    subscriptiondal.SubscriptionDAL
 }
 
 var (
@@ -37,7 +39,7 @@ func (s *SubscriptionServer) Subscribe(ctx context.Context, req *subscriptions.S
 		Client:    s.client,
 		ErrorChan: errorChan,
 	}
-	go subscriptiondal.Subscribe(request, req.Subscriber, req.Publisher, result)
+	go s.dal.Subscribe(request, req.Subscriber, req.Publisher, result)
 
 	select {
 	case <-result:
@@ -59,7 +61,7 @@ func (s *SubscriptionServer) Unsubscribe(ctx context.Context, req *subscriptions
 		ErrorChan: errorChan,
 	}
 
-	go subscriptiondal.Unsubscribe(request, req.Subscriber, req.Publisher, result)
+	go s.dal.Unsubscribe(request, req.Subscriber, req.Publisher, result)
 
 	select {
 	case <-result:
@@ -79,7 +81,7 @@ func (s *SubscriptionServer) GetSubscriptions(ctx context.Context, req *subscrip
 		Client:    s.client,
 		ErrorChan: errorChan,
 	}
-	go subscriptiondal.GetSubscriptions(request, req.Username, result)
+	go s.dal.GetSubscriptions(request, req.Username, result)
 
 	select {
 	case res := <-result:
@@ -107,6 +109,7 @@ func main() {
 	server := grpc.NewServer()
 	subscriptions.RegisterSubscriptionServiceServer(server, &SubscriptionServer{
 		client: cli,
+		dal:    subscriptiondal.SubscriptionDAL{Mutex: sync.Mutex{}},
 	})
 	reflection.Register(server)
 	log.Println("Subscription service running on :3005")

@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
+	"sync"
 	"time"
 )
 
@@ -21,6 +22,7 @@ var (
 type UserServer struct {
 	users.UnimplementedUserServiceServer
 	client *clientv3.Client
+	dal    userdal.UserDAL
 }
 
 /*
@@ -39,7 +41,7 @@ func (server *UserServer) CheckUserNameExists(ctx context.Context, req *users.Ge
 		Client:    server.client,
 		ErrorChan: errorChan,
 	}
-	go userdal.GetUser(request, req.Username, res)
+	go server.dal.GetUser(request, req.Username, res)
 
 	select {
 	case us := <-res:
@@ -66,7 +68,7 @@ func (server *UserServer) GetUsers(ctx context.Context, req *users.GetUsersReque
 		ErrorChan: errorChan,
 	}
 
-	go userdal.GetUsers(request, res)
+	go server.dal.GetUsers(request, res)
 
 	select {
 	case us := <-res:
@@ -89,7 +91,7 @@ func (server *UserServer) CreateUser(ctx context.Context, req *users.CreateUserR
 		ErrorChan: errorChan,
 	}
 
-	go userdal.CreateUser(request, req.Username, req.User, res)
+	go server.dal.CreateUser(request, req.Username, req.User, res)
 
 	select {
 	case <-res:
@@ -112,7 +114,7 @@ func (server *UserServer) GetUser(ctx context.Context, req *users.GetUserRequest
 		ErrorChan: errorChan,
 	}
 
-	go userdal.GetUser(request, req.Username, res)
+	go server.dal.GetUser(request, req.Username, res)
 
 	select {
 	case r := <-res:
@@ -136,7 +138,10 @@ func main() {
 	defer cli.Close()
 
 	server := grpc.NewServer()
-	users.RegisterUserServiceServer(server, &UserServer{client: cli})
+	users.RegisterUserServiceServer(server, &UserServer{
+		client: cli,
+		dal:    userdal.UserDAL{Mutex: sync.Mutex{}},
+	})
 	reflection.Register(server)
 	log.Println("User service running on :3002")
 	if err := server.Serve(listener); err != nil {

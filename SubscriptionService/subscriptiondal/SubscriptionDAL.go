@@ -12,31 +12,31 @@ type SubscriptionDB struct {
 	Subscriptions map[string][]string
 }
 
-var (
-	mutex sync.Mutex
-)
+type SubscriptionDAL struct {
+	Mutex sync.Mutex
+}
 
-func GetSubscriptions(request common.DALRequest, username string, result chan *subscriptions.GetSubscriptionsResponse) {
-	mutex.Lock()
-	defer mutex.Unlock()
+func (dal *SubscriptionDAL) GetSubscriptions(request common.DALRequest, username string, result chan *subscriptions.GetSubscriptionsResponse) {
+	dal.Mutex.Lock()
+	defer dal.Mutex.Unlock()
 
 	subscriptionDB := getSubscriptionCollection(request)
 
 	result <- &subscriptions.GetSubscriptionsResponse{Subscriptions: subscriptionDB.Subscriptions[username]}
 }
 
-func Subscribe(request common.DALRequest, subscriber string, publisher string, result chan bool) {
-	mutex.Lock()
-	defer mutex.Unlock()
+func (dal *SubscriptionDAL) Subscribe(request common.DALRequest, subscriber string, publisher string, result chan bool) {
+	dal.Mutex.Lock()
+	defer dal.Mutex.Unlock()
 
 	subscriptionDB := getSubscriptionCollection(request)
 	subscriptionDB.Subscriptions[subscriber] = append(subscriptionDB.Subscriptions[subscriber], publisher)
 	updateSubscriptions(subscriptionDB, request, result)
 }
 
-func Unsubscribe(request common.DALRequest, subscriber string, publisher string, result chan bool) {
-	mutex.Lock()
-	defer mutex.Unlock()
+func (dal *SubscriptionDAL) Unsubscribe(request common.DALRequest, subscriber string, publisher string, result chan bool) {
+	dal.Mutex.Lock()
+	defer dal.Mutex.Unlock()
 	subscriptionDB := getSubscriptionCollection(request)
 	for index, pub := range subscriptionDB.Subscriptions[subscriber] {
 		if publisher == pub {
