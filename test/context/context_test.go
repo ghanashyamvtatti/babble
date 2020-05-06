@@ -34,7 +34,6 @@ func TestUserDALStorageGetUsers(t *testing.T) {
 		Endpoints:   []string{"127.0.0.1:2379"},
 	})
 	defer cli.Close()
-	// keyVal := clientv3.NewKV(cli)
 
 	res := make(chan *models.User)
 	errorChan := make(chan error)
