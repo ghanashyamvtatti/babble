@@ -49,7 +49,13 @@ func (s *SubscriptionServer) Subscribe(ctx context.Context, req *subscriptions.S
 	case <-ctx.Done():
 		ok := <-result
 		if ok {
-			s.Unsubscribe(context.Background(), req)
+			subRes := make(chan bool)
+			subRequest := common.DALRequest{
+				Ctx:       context.Background(),
+				Client:    s.client,
+				ErrorChan: errorChan,
+			}
+			s.dal.Unsubscribe(subRequest, req.Subscriber, req.Publisher, subRes)
 		}
 		return &subscriptions.SubscribeResponse{}, ctx.Err()
 	}
@@ -75,7 +81,13 @@ func (s *SubscriptionServer) Unsubscribe(ctx context.Context, req *subscriptions
 	case <-ctx.Done():
 		ok := <-result
 		if ok {
-			s.Subscribe(context.Background(), req)
+			subRes := make(chan bool)
+			subRequest := common.DALRequest{
+				Ctx:       context.Background(),
+				Client:    s.client,
+				ErrorChan: errorChan,
+			}
+			s.dal.Subscribe(subRequest, req.Subscriber, req.Publisher, subRes)
 		}
 		return &subscriptions.SubscribeResponse{}, ctx.Err()
 	}

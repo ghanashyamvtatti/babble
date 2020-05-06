@@ -54,7 +54,13 @@ func (server *PostsServer) AddPost(ctx context.Context, post *posts.AddPostReque
 	case <-ctx.Done():
 		res := <-result
 		if res {
-			server.DeletePost(context.Background(), post)
+			delRes := make(chan bool)
+			req := common.DALRequest{
+				Ctx:       context.Background(),
+				Client:    server.client,
+				ErrorChan: errorChan,
+			}
+			go server.postDAL.DeletePost(req, post.Username, post.Post, delRes)
 		}
 		return &posts.AddPostResponse{Ok: false}, ctx.Err()
 	}
@@ -80,7 +86,13 @@ func (server *PostsServer) DeletePost(ctx context.Context, post *posts.AddPostRe
 	case <-ctx.Done():
 		res := <-result
 		if res {
-			server.AddPost(context.Background(), post)
+			addRes := make(chan bool)
+			req := common.DALRequest{
+				Ctx:       context.Background(),
+				Client:    server.client,
+				ErrorChan: errorChan,
+			}
+			go server.postDAL.AddPost(req, post.Username, post.Post, addRes)
 		}
 		return &posts.AddPostResponse{Ok: false}, ctx.Err()
 	}
