@@ -5,14 +5,28 @@
 ```
 .
 ├── common                  # Contains utilities and protobufs common to the entire project
-├── config                  # Application session level data structures and their initial values
-├── servers                 # Contains gRPC servers for Auth, User, Post, Subscription and Data services
-├── controllers             # Controllers for the various endpoints defined in web.go
-├── dtos                    # Data Transfer Objects (shapes the data in the format expected by the UI)
+  ├── proto                 # Contains all the protocol buffers
+  ├── utilities             # Contains methods and structures common to the entire project
+  ├── requests.go           # A handy struct to hold commonly used params in DAL functions
+├── config                  # Initial entries for the etcd data store
+├── test                    # Test cases for the project
+  ├── route_testing.go        # Integration tests
+  └── service_test.go         # Service tests 
+|── APIGateway              # Main backend - communicates with other microservies and provides REST APIs
+  ├── controllers             # Controllers for the various endpoints defined in web.go
+  ├── dtos                    # Data Transfer Objects (shapes the data in the format expected by the UI)
+  ├── common
+    ├── clients.go            # A wrapper struct for holding all the gRPC client objects
+  └── web.go                  # Contains the gin routes 
 ├── UI                      # ReactJS based UI
-├── web.go                  # Contains the gin routes 
-├── route_testing.go        # Integration tests
-├── service_test.go         # Service tests 
+├── AuthServer              # gRPC microservice for authorization
+  ├── authdal
+├── PostService             # gRPC microservice for managing posts
+  ├── postdal
+├── SubscriptionService     # gRPC microservice for managing subscriptions
+  ├── subscriptiondal
+├── UserService             # gRPC microservice for user management
+  ├── userdal
 ├── go.mod
 ├── .gitignore
 └── README.md
@@ -23,21 +37,21 @@
 | Server               | Port |
 |----------------------|------|
 | Auth Server          | 3004 |
-| Data Server          | 3001 |
 | Posts Server         | 3003 |
 | Users Server         | 3002 |
 | Subscriptions Server | 3005 |
 | UI                   | 3000 |
 | API Gateway          | 8080 |
-
-Each micro-service will be interacting with its own key-val pair in the raft implementation we'll use in stage 3
-So the data server is currently emulating etcd/raft.
  
 ## Setup
 (ensure you have yarn or npm installed)
-1. `cd` into your GOPATH
-2. `git clone https://github.com/Distributed-Systems-CSGY9223/vo383-ppr239-gvt217-final-project ds-project`
-3. `cd ds-project/UI/babble`
+
+1. Go to https://github.com/etcd-io/etcd/releases
+    * (Linux and MacOS) Follow the instructions as mentioned in the website
+    * (Windows) Download the windows zip file, extract it locally and add the folder to PATH
+2. `cd` into your GOPATH
+3. `git clone https://github.com/Distributed-Systems-CSGY9223/vo383-ppr239-gvt217-final-project ds-project`
+4. `cd ds-project/UI/babble`
 5. `npm install` or `yarn install`
 6. `cd ../..`
 7. `go build ds-project`
