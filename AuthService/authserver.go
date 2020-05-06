@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"ds-project/AuthService/authdal"
+	"ds-project/AuthService/authdal/impl"
 	"ds-project/common"
 	"ds-project/common/proto/auth"
 	"ds-project/common/proto/users"
@@ -133,22 +134,32 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	userConnection, err := grpc.Dial("localhost:3002", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+	defer userConnection.Close()
+
+	server := grpc.NewServer()
+	var authDAL authdal.AuthDAL
+
+	// Below code uses etcd
 	cli, _ := clientv3.New(clientv3.Config{
 		DialTimeout: dialTimeout,
 		Endpoints:   []string{"127.0.0.1:2379"},
 	})
 	defer cli.Close()
+	authDAL = &impl.EtcdAuthDAL{Mutex: sync.Mutex{}}
 
-	userConnection, err := grpc.Dial("localhost:3002", grpc.WithInsecure())
-	if err != nil {
-		panic(err)
-	}
-
-	server := grpc.NewServer()
+	// Below code uses in-memory storage
+	/*	appConfig := config.NewAppConfig()
+		authDAL = &impl.DSLAuthDAL{Mutex: sync.Mutex{}, AppConfig: appConfig}*/
+	
 	auth.RegisterAuthServiceServer(server, &AuthServer{
+		// Remove the client param if using in-memory storage
 		client:     cli,
 		userClient: users.NewUserServiceClient(userConnection),
-		authDAL:    authdal.AuthDAL{Mutex: sync.Mutex{}},
+		authDAL:    authDAL,
 	})
 	reflection.Register(server)
 	log.Println("Auth service running on :3004")

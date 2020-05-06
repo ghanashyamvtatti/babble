@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"ds-project/UserService/userdal"
+	"ds-project/UserService/userdal/impl"
 	"ds-project/common"
 	"ds-project/common/proto/models"
 	"ds-project/common/proto/users"
@@ -131,16 +132,29 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
+	server := grpc.NewServer()
+
+	var dal userdal.UserDAL
+
+	// Use etcd storage
 	cli, _ := clientv3.New(clientv3.Config{
 		DialTimeout: dialTimeout,
 		Endpoints:   []string{"127.0.0.1:2379"},
 	})
 	defer cli.Close()
 
-	server := grpc.NewServer()
+	dal = &impl.EtcdUserDAL{Mutex: sync.Mutex{}}
+
+	// Use in-memory storage
+	/*	appConfig := config.NewAppConfig()
+		dal = &impl.DSLUserDAL{
+			Mutex:     sync.Mutex{},
+			AppConfig: appConfig,
+		}*/
 	users.RegisterUserServiceServer(server, &UserServer{
 		client: cli,
-		dal:    userdal.UserDAL{Mutex: sync.Mutex{}},
+		dal:    dal,
 	})
 	reflection.Register(server)
 	log.Println("User service running on :3002")

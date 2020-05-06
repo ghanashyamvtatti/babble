@@ -2,16 +2,12 @@ package context
 
 import (
 	"context"
-	"ds-project/UserService/userdal"
-	"ds-project/common"
-	"ds-project/common/proto/models"
 	"ds-project/common/proto/posts"
 	"ds-project/common/proto/subscriptions"
+	"ds-project/common/proto/users"
 	"fmt"
-	"github.com/coreos/etcd/clientv3"
 	"google.golang.org/grpc"
 	"log"
-	"sync"
 	"testing"
 	"time"
 )
@@ -26,87 +22,27 @@ var (
 )
 
 // Test cases for User Service
-
-func TestUserDALStorageGetUsers(t *testing.T) {
-	log.Println("Testing User DAL Storage")
-	cli, _ := clientv3.New(clientv3.Config{
-		DialTimeout: dialTimeout,
-		Endpoints:   []string{"127.0.0.1:2379"},
-	})
-	defer cli.Close()
-
-	res := make(chan *models.User)
-	errorChan := make(chan error)
-
-	request := common.DALRequest{
-		Ctx:       context.Background(),
-		Client:    cli,
-		ErrorChan: errorChan,
+func TestUserServiceGetUsersWithCancelledContext(t *testing.T) {
+	log.Println("Testing UserService with cancelled context")
+	userConnection, err := grpc.Dial("localhost:3002", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
 	}
-
-	ctx := context.Background()
-	dal := userdal.UserDAL{Mutex: sync.Mutex{}}
-
-	go dal.GetUser(request, "ghanu", res)
-
-	select {
-	case us := <-res:
-		fmt.Println(us)
-	case err := <-errorChan:
-		fmt.Println(err)
-		t.Error("fails")
-	case <-ctx.Done():
-		fmt.Println(ctx.Done())
-		t.Error("fails")
-	}
-}
-
-func TestUserDALStorageGetUsersWithCancelledContext(t *testing.T) {
-	log.Println("Testing User DAL Storage with Cancelled Context")
-	cli, _ := clientv3.New(clientv3.Config{
-		DialTimeout: dialTimeout,
-		Endpoints:   []string{"127.0.0.1:2379"},
-	})
-	defer cli.Close()
-	// keyVal := clientv3.NewKV(cli)
-
-	res := make(chan *models.User)
-	errorChan := make(chan error)
-
+	userClient := users.NewUserServiceClient(userConnection)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	//ctx, _ := context.WithTimeout(context.Background(),time.Duration(2*time.Second))
-
-	request := common.DALRequest{
-		Ctx:       ctx,
-		Client:    cli,
-		ErrorChan: errorChan,
+	response, err := userClient.GetUsers(ctx, &users.GetUsersRequest{})
+	fmt.Println(response)
+	if response == nil && err != nil && err.Error() == "rpc error: code = Canceled desc = context canceled" {
+		t.Log("The context cancellation was handled")
+	} else {
+		t.Fatal("The context cancellation was not handled")
 	}
-
-	dal := userdal.UserDAL{Mutex: sync.Mutex{}}
-
-	// time.Sleep(3 * time.Second)
-	go dal.GetUser(request, "ghanu", res)
-
-	select {
-	case us := <-res:
-		fmt.Println(us)
-	case err := <-errorChan:
-		fmt.Println(err)
-		t.Error("fails")
-	case <-ctx.Done():
-		fmt.Println(ctx.Err())
-		fmt.Println("Cancelled context case")
-		// fmt.Println(ctx.Done())
-		// t.Error("fails")
-	}
-
-	//defer cancel()
 }
 
 // Test cases for SubscriptionService
-
-func TestGetSubscriptionsContextCancelled(t *testing.T) {
+func
+TestGetSubscriptionsContextCancelled(t *testing.T) {
 	connection, err := grpc.Dial("localhost:3005", grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		panic(err)
@@ -120,7 +56,8 @@ func TestGetSubscriptionsContextCancelled(t *testing.T) {
 	}
 }
 
-func TestSubscribeContextCancelled(t *testing.T) {
+func
+TestSubscribeContextCancelled(t *testing.T) {
 	connection, err := grpc.Dial("localhost:3005", grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		panic(err)
@@ -144,7 +81,8 @@ func TestSubscribeContextCancelled(t *testing.T) {
 	}
 }
 
-func TestUnsubscribeContextCancelled(t *testing.T) {
+func
+TestUnsubscribeContextCancelled(t *testing.T) {
 	connection, err := grpc.Dial("localhost:3005", grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		panic(err)
@@ -175,7 +113,8 @@ func TestUnsubscribeContextCancelled(t *testing.T) {
 }
 
 // Test cases for Posts
-func TestAddPostForContextCancelled(t *testing.T) {
+func
+TestAddPostForContextCancelled(t *testing.T) {
 	postConnection, err := grpc.Dial("localhost:3003", grpc.WithInsecure())
 	if err != nil {
 		panic(err)
