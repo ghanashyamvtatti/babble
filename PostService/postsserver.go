@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"ds-project/PostService/postdal"
+	"ds-project/PostService/postdal/impl"
 	"ds-project/common"
 	"ds-project/common/proto/models"
 	"ds-project/common/proto/posts"
@@ -148,23 +149,36 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	// Set up a connection to etcd.
-	cli, _ := clientv3.New(clientv3.Config{
-		DialTimeout: dialTimeout,
-		Endpoints:   []string{"127.0.0.1:2379"},
-	})
-	defer cli.Close()
-
 	subscriptionConnection, err := grpc.Dial("localhost:3005", grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}
 
+	defer subscriptionConnection.Close()
+
 	server := grpc.NewServer()
+	var postDAL postdal.PostDAL
+
+	// Below code uses etcd
+	cli, _ := clientv3.New(clientv3.Config{
+		DialTimeout: dialTimeout,
+		Endpoints:   []string{"127.0.0.1:2379"},
+	})
+	defer cli.Close()
+	postDAL = &impl.EtcdPostDAL{Mutex: sync.Mutex{}}
+
+	// Below code uses in-memory storage
+	/*	appConfig := config.NewAppConfig()
+		postDAL = &impl.DSLPostDAL{
+			Mutex:     sync.Mutex{},
+			AppConfig: appConfig,
+		}*/
+
 	posts.RegisterPostsServiceServer(server, &PostsServer{
+		// Remove the client param if using in-memory storage
 		client:             cli,
 		subscriptionClient: subscriptions.NewSubscriptionServiceClient(subscriptionConnection),
-		postDAL:            postdal.PostDAL{Mutex: sync.Mutex{}},
+		postDAL:            postDAL,
 	})
 	reflection.Register(server)
 	log.Println("Posts service running on :3003")

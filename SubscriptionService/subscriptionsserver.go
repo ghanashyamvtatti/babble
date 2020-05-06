@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"ds-project/SubscriptionService/subscriptiondal"
+	"ds-project/SubscriptionService/subscriptiondal/impl"
 	"ds-project/common"
 	"ds-project/common/proto/subscriptions"
 	"github.com/coreos/etcd/clientv3"
@@ -119,17 +120,24 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	// Set up a connection to etcd.
+	server := grpc.NewServer()
+	var dal subscriptiondal.SubscriptionDAL
+
+	// Use etcd
 	cli, _ := clientv3.New(clientv3.Config{
 		DialTimeout: dialTimeout,
 		Endpoints:   []string{"127.0.0.1:2379"},
 	})
 	defer cli.Close()
+	dal = &impl.EtcdSubscriptionDAL{Mutex: sync.Mutex{}}
 
-	server := grpc.NewServer()
+	// Use in-memory storage
+	/*	appConfig := config.NewAppConfig()
+		dal = &impl.DSLSubscriptionDAL{Mutex: sync.Mutex{}, AppConfig: appConfig}*/
+
 	subscriptions.RegisterSubscriptionServiceServer(server, &SubscriptionServer{
 		client: cli,
-		dal:    subscriptiondal.SubscriptionDAL{Mutex: sync.Mutex{}},
+		dal:    dal,
 	})
 	reflection.Register(server)
 	log.Println("Subscription service running on :3005")

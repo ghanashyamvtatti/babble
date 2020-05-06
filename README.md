@@ -10,8 +10,9 @@
   ├── requests.go           # A handy struct to hold commonly used params in DAL functions
 ├── config                  # Initial entries for the etcd data store
 ├── test                    # Test cases for the project
-  ├── route_testing.go        # Integration tests
-  └── service_test.go         # Service tests 
+  ├── concurrency
+  ├── context
+  └── services 
 |── APIGateway              # Main backend - communicates with other microservies and provides REST APIs
   ├── controllers             # Controllers for the various endpoints defined in web.go
   ├── dtos                    # Data Transfer Objects (shapes the data in the format expected by the UI)
@@ -19,14 +20,18 @@
     ├── clients.go            # A wrapper struct for holding all the gRPC client objects
   └── web.go                  # Contains the gin routes 
 ├── UI                      # ReactJS based UI
-├── AuthServer              # gRPC microservice for authorization
-  ├── authdal
+├── AuthService             # gRPC microservice for authorization
+  ├── authdal               # etcd and in-memory implementations
+  └── config                # Stores config for in-memory storage
 ├── PostService             # gRPC microservice for managing posts
-  ├── postdal
+  ├── postdal               # etcd and in-memory implementations
+  └── config                # Stores config for in-memory storage
 ├── SubscriptionService     # gRPC microservice for managing subscriptions
-  ├── subscriptiondal
+  ├── subscriptiondal       # etcd and in-memory implementations
+  └── config                # Stores config for in-memory storage
 ├── UserService             # gRPC microservice for user management
-  ├── userdal
+  ├── userdal               # etcd and in-memory implementations
+  └── config                # Stores config for in-memory storage
 ├── go.mod
 ├── .gitignore
 └── README.md
