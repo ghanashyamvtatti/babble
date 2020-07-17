@@ -1,2 +1,2 @@
 dev:
-	go run APIGateway/router.go
+	go run APIGateway/web.go

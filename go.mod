@@ -6,6 +6,7 @@ require (
 	github.com/coreos/etcd v3.3.4+incompatible
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/gin-contrib/cors v1.3.1
+	github.com/gin-contrib/static v0.0.0-20191128031702-f81c604d8ac2
 	github.com/gin-gonic/gin v1.6.1
 	github.com/golang/protobuf v1.4.0-rc.4
 	github.com/google/uuid v1.1.1

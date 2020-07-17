@@ -7,6 +7,7 @@ import (
 	"ds-project/common/proto/posts"
 	"ds-project/common/proto/subscriptions"
 	"ds-project/common/proto/users"
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
 )
@@ -18,7 +19,7 @@ func main() {
 
 func SetupRouter() *gin.Engine {
 	router := gin.Default()
-
+	router.Use(static.Serve("/", static.LocalFile("./UI/babble/build", true)))
 	router.Use(controllers.CORSMiddleware())
 
 	// Create connections to various services
