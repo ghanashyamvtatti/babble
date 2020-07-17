@@ -11,127 +11,165 @@ export const SIGN_UP = "SIGN_UP";
 export const CHANGE_PAGE = "CHANGE_PAGE";
 export const LOAD_USERS = "LOAD_USERS";
 
-export const signIn = payload => ({
+const fetchWithTimeout = (uri, options = {}, time = 5000) => {
+  // Lets set up our `AbortController`, and create a request options object
+  // that includes the controller's `signal` to pass to `fetch`.
+  const controller = new AbortController();
+  const config = { ...options, signal: controller.signal };
+  // Set a timeout limit for the request using `setTimeout`. If the body
+  // of this timeout is reached before the request is completed, it will
+  // be cancelled.
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, time);
+  return fetch(uri, config)
+    .then((response) => {
+      // Because _any_ response is considered a success to `fetch`, we
+      // need to manually check that the response is in the 200 range.
+      // This is typically how I handle that.
+      if (!response.ok && response.type !== "cors") {
+        console.log(response);
+      }
+      return response;
+    })
+    .catch((error) => {
+      // When we abort our `fetch`, the controller conveniently throws
+      // a named error, allowing us to handle them separately from
+      // other errors.
+      if (error.name === "AbortError") {
+        message.error("Response timed out");
+      }
+    });
+};
+
+export const signIn = (payload) => ({
   type: SIGN_IN,
-  payload
+  payload,
 });
 
-export const changePage = payload => ({
+export const changePage = (payload) => ({
   type: CHANGE_PAGE,
-  payload
+  payload,
 });
 
 export function signInProcess(username, password) {
-  return async function(dispatch) {
-    const res = await fetch("http://localhost:8080/auth/sign-in", {
+  return async function (dispatch) {
+    const res = await fetchWithTimeout("http://localhost:8080/auth/sign-in", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: username,
-        password: password
-      })
+        password: password,
+      }),
     });
-    const res_1 = await res.json();
-    console.log(res_1);
-    if (res_1.Status) {
-      dispatch(signIn(res_1.Data));
-      dispatch(changePage(FEED));
-    } else {
-      message.error(res_1.Message);
+    if (res !== undefined) {
+      const res_1 = await res.json();
+      if (res_1.Status) {
+        dispatch(signIn(res_1.Data));
+        dispatch(changePage(FEED));
+      } else {
+        message.error(res_1.Message);
+      }
     }
   };
 }
 
-export const signOut = payload => ({
+export const signOut = (payload) => ({
   type: SIGN_OUT,
-  payload
+  payload,
 });
 
-export const loadUsers = payload => ({
+export const loadUsers = (payload) => ({
   type: LOAD_USERS,
-  payload
+  payload,
 });
 
 export function signOutProcess(username) {
-  return async function(dispatch) {
-    const resp = await fetch(
+  return async function (dispatch) {
+    const resp = await fetchWithTimeout(
       "http://localhost:8080/auth/user/" + username + "/sign-out",
       { method: "POST" }
     );
-    const res = await resp.json();
-    if (res.Status) {
-      dispatch(signOut());
-      dispatch(changePage(LOGIN));
+    if (resp !== undefined) {
+      const res = await resp.json();
+      if (res.Status) {
+        dispatch(signOut());
+        dispatch(changePage(LOGIN));
+      }
     }
   };
 }
 
-export const loadFeed = payload => ({
+export const loadFeed = (payload) => ({
   type: LOAD_FEED,
-  payload
+  payload,
 });
 
 export function loadFeedData(username, token) {
-  return async function(dispatch) {
-    const res = await fetch(
+  return async function (dispatch) {
+    const res = await fetchWithTimeout(
       "http://localhost:8080/social/user/" + username + "/feed",
       {
         method: "GET",
         headers: {
-          token: token
-        }
+          token: token,
+        },
       }
     );
-    const data = await res.json();
-    if (data.Status) {
-      if (data.Data.feed === undefined || data.Data.feed == null) {
-        dispatch(loadFeed([]));
+    if (res !== undefined) {
+      const data = await res.json();
+      if (data.Status) {
+        if (data.Data.feed === undefined || data.Data.feed == null) {
+          dispatch(loadFeed([]));
+        } else {
+          dispatch(loadFeed(data.Data.feed));
+        }
       } else {
-        dispatch(loadFeed(data.Data.feed));
+        message.error(data.Message);
       }
-    } else {
-      message.error(data.Message);
     }
   };
 }
 
-export const loadSubscriptions = payload => ({
+export const loadSubscriptions = (payload) => ({
   type: LOAD_SUBSCRIPTIONS,
-  payload
+  payload,
 });
 
 export function loadSubscriptionDetails(token, username) {
-  return async function(dispatch) {
-    const resp = await fetch(
+  return async function (dispatch) {
+    const resp = await fetchWithTimeout(
       "http://localhost:8080/social/user/" + username + "/subscriptions",
       {
         method: "GET",
         headers: {
-          token: token
-        }
+          token: token,
+        },
       }
     );
-    const data = await resp.json();
+    if (resp !== undefined) {
+      const data = await resp.json();
 
-    if (data.Status) {
-      if (
-        data.Data.subscriptions === undefined ||
-        data.Data.subscriptions == null
-      ) {
-        data.Data.subscriptions = [];
-        dispatch(loadSubscriptions(data.Data));
+      if (data.Status) {
+        if (
+          data.Data.subscriptions === undefined ||
+          data.Data.subscriptions == null
+        ) {
+          data.Data.subscriptions = [];
+          dispatch(loadSubscriptions(data.Data));
+        } else {
+          dispatch(loadSubscriptions(data.Data));
+        }
       } else {
-        dispatch(loadSubscriptions(data.Data));
+        message.error(data.Message);
       }
-    } else {
-      message.error(data.Message);
     }
   };
 }
 
 export function unsubscribe(token, username, publisher) {
-  return async function(dispatch) {
-    const resp = await fetch(
+  return async function (dispatch) {
+    const resp = await fetchWithTimeout(
       "http://localhost:8080/social/user/" +
         username +
         "/subscribe/" +
@@ -139,23 +177,25 @@ export function unsubscribe(token, username, publisher) {
       {
         method: "DELETE",
         headers: {
-          token: token
-        }
+          token: token,
+        },
       }
     );
-    const data = await resp.json();
-    if (data.Status) {
-      dispatch(loadSubscriptionDetails(token, username));
-      message.success("Successfully unsubscribed");
-    } else {
-      message.error(data.Message);
+    if (resp !== undefined) {
+      const data = await resp.json();
+      if (data.Status) {
+        dispatch(loadSubscriptionDetails(token, username));
+        message.success("Successfully unsubscribed");
+      } else {
+        message.error(data.Message);
+      }
     }
   };
 }
 
 export function subscribe(token, username, publisher) {
-  return async function(dispatch) {
-    const resp = await fetch(
+  return async function (dispatch) {
+    const resp = await fetchWithTimeout(
       "http://localhost:8080/social/user/" +
         username +
         "/subscribe/" +
@@ -163,136 +203,148 @@ export function subscribe(token, username, publisher) {
       {
         method: "POST",
         headers: {
-          token: token
-        }
+          token: token,
+        },
       }
     );
-    const data = await resp.json();
-    if (data.Status) {
-      dispatch(loadSubscriptionDetails(token, username));
-      message.success("Successfully subscribed");
-    } else {
-      message.error(data.Message);
+    if (resp !== undefined) {
+      const data = await resp.json();
+      if (data.Status) {
+        dispatch(loadSubscriptionDetails(token, username));
+        message.success("Successfully subscribed");
+      } else {
+        message.error(data.Message);
+      }
     }
   };
 }
 
 export function getAllUsers(token) {
-  return async function(dispatch) {
-    const resp = await fetch("http://localhost:8080/social/user");
-    const data = await resp.json();
-    if (data.Status) {
-      dispatch(loadUsers(data.Data.result));
-    } else {
-      message.error(data.Message);
+  return async function (dispatch) {
+    const resp = await fetchWithTimeout("http://localhost:8080/social/user");
+    if (resp !== undefined) {
+      const data = await resp.json();
+      if (data.Status) {
+        dispatch(loadUsers(data.Data.result));
+      } else {
+        message.error(data.Message);
+      }
     }
   };
 }
 
-export const loadUserProfile = payload => ({
+export const loadUserProfile = (payload) => ({
   type: LOAD_PROFILE,
-  payload
+  payload,
 });
 
 export function loadUserDetails(token, me, username) {
   console.log(token, me, username);
 
-  return async function(dispatch) {
-    const resp = await fetch(
+  return async function (dispatch) {
+    const resp = await fetchWithTimeout(
       "http://localhost:8080/social/user/" + me + "/?username=" + username,
       {
         method: "GET",
         headers: {
-          token: token
-        }
+          token: token,
+        },
       }
     );
-    const res = await resp.json();
-    if (res.Status) {
-      console.log(res);
-      var user = res.Data.user;
-      const postResp = await fetch(
-        "http://localhost:8080/social/user/" +
-          me +
-          "/post?username=" +
-          username,
-        {
-          headers: {
-            token: token
+    if (resp !== undefined) {
+      const res = await resp.json();
+      if (res.Status) {
+        console.log(res);
+        var user = res.Data.user;
+        const postResp = await fetchWithTimeout(
+          "http://localhost:8080/social/user/" +
+            me +
+            "/post?username=" +
+            username,
+          {
+            headers: {
+              token: token,
+            },
+          }
+        );
+        if (postResp !== undefined) {
+          const postRes = await postResp.json();
+          if (postRes.Status) {
+            var posts = postRes.Data.posts;
+            if (posts === undefined || posts == null) {
+              dispatch(loadUserProfile({ user: user, posts: [] }));
+            } else {
+              dispatch(loadUserProfile({ user: user, posts: posts }));
+            }
+            dispatch(changePage(USER));
+          } else {
+            message.error(postRes.Message);
           }
         }
-      );
-      const postRes = await postResp.json();
-      if (postRes.Status) {
-        var posts = postRes.Data.posts;
-        if (posts === undefined || posts == null) {
-          dispatch(loadUserProfile({ user: user, posts: [] }));
-        } else {
-          dispatch(loadUserProfile({ user: user, posts: posts }));
-        }
-        dispatch(changePage(USER));
       } else {
-        message.error(postRes.Message);
+        message.error(res.Message);
       }
-    } else {
-      message.error(res.Message);
     }
   };
 }
 
-export const addPost = payload => ({
+export const addPost = (payload) => ({
   type: ADD_POST,
-  payload
+  payload,
 });
 
 export function addPostProcess(token, username, postText) {
   console.log(token, username, postText);
-  return async function(dispatch) {
-    const resp = await fetch(
+  return async function (dispatch) {
+    const resp = await fetchWithTimeout(
       "http://localhost:8080/social/user/" + username + "/post",
       {
         method: "POST",
         headers: {
           token: token,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ post: postText })
+        body: JSON.stringify({ post: postText }),
       }
     );
-    const res = await resp.json();
-    if (res.Status) {
-      console.log(res);
-      dispatch(loadFeedData(username, token));
-    } else {
-      message.error(res.Message);
+    if (resp !== undefined) {
+      const res = await resp.json();
+      if (res.Status) {
+        console.log(res);
+        dispatch(loadFeedData(username, token));
+      } else {
+        message.error(res.Message);
+      }
     }
   };
 }
 
-export const signUp = payload => ({
+export const signUp = (payload) => ({
   type: SIGN_UP,
-  payload
+  payload,
 });
 
 export function signUpProcess(name, username, password) {
   console.log(username, password, name);
-  return async function(dispatch) {
-    const res = await fetch("http://localhost:8080/auth/sign-up", {
+  return async function (dispatch) {
+    const res = await fetchWithTimeout("http://localhost:8080/auth/sign-up", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: name,
         username: username,
-        password: password
-      })
+        password: password,
+      }),
     });
-    const res_1 = await res.json();
-    if (res_1.Status) {
-      console.log(res_1);
-      dispatch(signUp(res_1.Data));
-      dispatch(changePage(FEED));
-    } else {
-      message.error(res_1.Message);
+    if (res !== undefined) {
+      const res_1 = await res.json();
+      if (res_1.Status) {
+        console.log(res_1);
+        dispatch(signUp(res_1.Data));
+        dispatch(changePage(FEED));
+      } else {
+        message.error(res_1.Message);
+      }
     }
   };
 }

@@ -16,7 +16,7 @@ class Post extends Component {
       <Card
         style={{
           maxWidth: "50%",
-          background: "#177ddc",
+          background: "#000000",
           marginLeft: "25%",
           marginRight: "25%",
           marginBottom: "25px"
